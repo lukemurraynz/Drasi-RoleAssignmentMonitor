@@ -9,6 +9,11 @@
 
   // "features" section allows adding and configuring predefined features or tools in the development container.
   "features": {
+      // Install the Kubernetes CLI
+	  "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+		"installMinikube": false,
+		"installHelm": false
+	  },
     // Adds Azure Developer CLI (azd) support.
     "ghcr.io/azure/azure-dev/azd:latest": {},
     "ghcr.io/devcontainers/features/docker-in-docker:latest": {
