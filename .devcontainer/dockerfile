@@ -5,7 +5,9 @@
 # designed for development containers. The "latest" tag specifies the most recent version of this image.
 FROM mcr.microsoft.com/devcontainers/universal:latest
 
-# Install Drasi CLI
-RUN curl -fsSL https://raw.githubusercontent.com/drasi-project/drasi-platform/main/cli/installers/install-drasi-cli.sh | bash \
+# Update packages and install dependencies before Drasi CLI
+RUN apt-get update && \
+    apt-get install -y libc6 && \
+    curl -fsSL https://raw.githubusercontent.com/drasi-project/drasi-platform/main/cli/installers/install-drasi-cli.sh | bash \
     && echo "Drasi CLI installed successfully" \
     || echo "Failed to install Drasi CLI"
