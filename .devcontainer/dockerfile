@@ -3,7 +3,7 @@
 # "mcr.microsoft.com/devcontainers/universal:latest" is the image being used.
 # It is a universal image provided by Microsoft, hosted on the Microsoft Container Registry (MCR),
 # designed for development containers. The "latest" tag specifies the most recent version of this image.
-FROM mcr.microsoft.com/devcontainers/universal:latest
+FROM mcr.microsoft.com/devcontainers/base:ubuntu
 
 # Update packages and install dependencies before Drasi CLI
 RUN apt-get update && \
