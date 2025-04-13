@@ -14,6 +14,11 @@
 		"installMinikube": false,
 		"installHelm": false
 	  },
+    "ghcr.io/devcontainers/features/azure-cli:latest": {
+      "installBicep": true,
+      "installUsingPython": true,
+      "version": "latest"
+  },
     // Adds Azure Developer CLI (azd) support.
     "ghcr.io/azure/azure-dev/azd:latest": {},
     "ghcr.io/devcontainers/features/docker-in-docker:latest": {
