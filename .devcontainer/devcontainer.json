@@ -40,9 +40,7 @@
         "ms-kubernetes-tools.vscode-aks-tools",
         "DrasiProject.drasi",
         "GitHub.copilot",
-        "GitHub.copilot-chat",
-        "ms-kubernetes-tools.aks-devx-tools"
-      ]
+        "GitHub.copilot-chat"      ]
     }
   }
 
