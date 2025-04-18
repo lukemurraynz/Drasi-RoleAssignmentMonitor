@@ -1,0 +1,13 @@
+kind: Source
+apiVersion: v1
+name: my-source
+spec:
+  kind: EventHub
+  identity:
+    kind: MicrosoftEntraWorkloadID
+    clientId: 5307fa2c-0bab-4c4e-9024-1470c5d15fd3
+  properties:
+    host: drascieventhubtest.servicebus.windows.net
+    eventHubs:
+      - eventhub1
+    bootstrapWindow: 0
