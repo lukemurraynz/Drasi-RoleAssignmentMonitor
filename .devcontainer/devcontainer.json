@@ -45,7 +45,9 @@
         "ms-kubernetes-tools.vscode-aks-tools",
         "DrasiProject.drasi",
         "GitHub.copilot",
-        "GitHub.copilot-chat"      ]
+        "GitHub.copilot-chat",
+        "Summer.azure-event-hub-explorer"
+      ]
     }
   }
 
