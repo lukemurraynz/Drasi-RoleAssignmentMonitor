@@ -5,10 +5,13 @@ Drasi playground
 sudo az aks install-cli
 az login
 az aks get-credentials --resource-group drasiaks --name drasiaks1
-kubectl config use-context drasiaks1
 drasi version
 drasi init --namespace drasi-system --version 0.2.1
 kubectl get pods -n dapr-system
+
+#Connect to Cluser
+
+kubectl config use-context drasiaks1
 
 #Event Hub source
 drasi apply -f eventhubsource.yaml
@@ -21,7 +24,7 @@ az identity federated-credential create \
     --subject system:serviceaccount:"drasi-system":"source.my-source" \
     --audience api://AzureADTokenExchange
 
-    drasi describe source my-source
+    drasi describe source my-source -n drasi-system 
 
     # Continous Query
 

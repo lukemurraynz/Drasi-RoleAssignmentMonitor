@@ -30,7 +30,7 @@
       "dockerDashComposeVersion": "latest"
     }
   },
-  "postCreateCommand": "pre-commit install",
+ // "postCreateCommand": "pre-commit install",
 
   // "customizations" section allows configuring specific aspects of the development environment, such as VS Code settings and extensions.
   "customizations": {
