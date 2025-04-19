@@ -7,5 +7,5 @@ spec:
       - id: my-source
   mode: query
   query: |
-    MATCH (e:Event)
+    MATCH (e:Events)
     RETURN e.time, e.category, e.operationName, e.callerIpAddress
