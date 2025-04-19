@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ContinuousQuery
+name: luke-actions-monitor
+spec:
+  sources:
+    subscriptions:
+      - id: my-source
+  mode: query
+  query: >
+    MATCH (u:User)
+    RETURN u.name
