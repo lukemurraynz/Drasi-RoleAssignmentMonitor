@@ -7,7 +7,5 @@ spec:
       - id: my-source
   mode: query
   query: >
-    MATCH (n)
-    WHERE n.sequenceNumber > 1661
-    RETURN n
+    RETURN 1
 
