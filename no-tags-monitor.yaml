@@ -7,5 +7,7 @@ spec:
       - id: my-source
   mode: query
   query: >
-    MATCH (u:User)
-    RETURN u.name
+    MATCH (n)
+    WHERE n.sequenceNumber > 1661
+    RETURN n
+
