@@ -7,7 +7,7 @@ spec:
       - id: my-source
   mode: query
   query: |
-    MATCH (e:Event)
+    MATCH (e:Events)
     WHERE e.category = 'Administrative'
     RETURN e.time AS time,
            e.category AS category,
