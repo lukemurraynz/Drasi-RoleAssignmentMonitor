@@ -18,9 +18,11 @@ az identity federated-credential create \
     --identity-name "drasiuim" \
     --resource-group "drasiaks" \
     --issuer "https://australiaeast.oic.prod-aks.azure.com/2463cfda-1c0b-43f5-b6e5-1c370752bb93/34045efe-e88e-4ecc-9437-2728a8076135/" \
-    --subject system:serviceaccount:"drasi-system":"source.drascieventhubtest" \
+    --subject system:serviceaccount:"drasi-system":"source.my-source" \
     --audience api://AzureADTokenExchange
 
     drasi describe source my-source
 
-    
+    # Continous Query
+
+    MATCH (n:eventhub1) RETURN n LIMIT 10
