@@ -7,5 +7,3 @@ spec:
     hello-world-from:
     message-count:
     inactive-people:
-  endpoints:
-    gateway: 8080    

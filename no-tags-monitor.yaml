@@ -7,11 +7,13 @@ spec:
       - id: my-source
   mode: query
   query: |
-    MATCH (e:Events)
+    MATCH (e:eventhub1)
     WHERE e.category = 'Administrative'
     RETURN e.time AS time,
-           e.category AS category,
-           e.operationName AS operation,
-           e.resultType AS result,
-           e.callerIpAddress AS sourceIp,
-           e.identity.claims.name AS userName
+         e.category AS category,
+         e.operationName AS operation,
+         e.resultType AS result,
+         e.callerIpAddress AS sourceIp,
+         e.identity.claims.name AS userName,
+         e.body AS messageBody,     // Returns the full message body
+         e.properties AS messageProperties  // Returns message properties
