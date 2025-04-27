@@ -23,6 +23,8 @@ az identity federated-credential create \
     --subject system:serviceaccount:"drasi-system":"source.my-source" \
     --audience api://AzureADTokenExchange
 
+# Add Azure Event Hubs Data Receiver 
+
 #Event Hub source
 drasi apply -f eventhubsource.yaml
 
