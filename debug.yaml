@@ -1,9 +1,26 @@
 apiVersion: v1
 kind: Reaction
-name: hello-world-debug
+name: eventhub-monitor-debug
 spec:
   kind: Debug
+  options:
+    prettyPrint: true
+    maxEvents: 50
+    includeTimestamps: true
   queries:
-    hello-world-from:
-    message-count:
-    inactive-people:
+    eventhub-raw-events: |
+      MATCH (e:eventhub1)
+      RETURN e LIMIT 10
+    eventhub-admin-events: |
+      MATCH (e:eventhub1) 
+      WHERE e.category = 'Administrative'
+      RETURN e.time AS time,
+             e.category AS category,
+             e.operationName AS operation,
+             e.resultType AS result,
+             e.callerIpAddress AS sourceIp,
+             e.identity.claims.name AS userName
+      LIMIT 20
+    eventhub-event-count: |
+      MATCH (e:eventhub1)
+      RETURN count(e) as totalEventCount
