@@ -10,4 +10,4 @@ spec:
     host: drasitestluke.servicebus.windows.net
     eventHubs:
       - eventhub1
-    bootstrapWindow: 0
+    bootstrapWindow: 5

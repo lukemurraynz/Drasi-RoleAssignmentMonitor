@@ -1,19 +1,55 @@
-apiVersion: v1
 kind: ContinuousQuery
-name: eventhub-test-query
+apiVersion: v1
+name: azure-role-assignments
 spec:
-  sources:
+  mode: query
+  sources:    
     subscriptions:
       - id: my-source
-  mode: query
-  query: |
-    MATCH (e:eventhub1)
-    WHERE e.category = 'Administrative'
-    RETURN e.time AS time,
-         e.category AS category,
-         e.operationName AS operation,
-         e.resultType AS result,
-         e.callerIpAddress AS sourceIp,
-         e.identity.claims.name AS userName,
-         e.body AS messageBody,     // Returns the full message body
-         e.properties AS messageProperties  // Returns message properties
+        nodes:
+          - sourceLabel: ActivityLog
+        pipeline:
+          - extract-role-assignments
+    middleware:
+      - kind: map
+        name: extract-role-assignments
+        ActivityLog:        
+          insert:
+            - selector: $[?(@.category == 'Administrative' && @.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE')]
+              op: Update              
+              label: RoleAssignment
+              id: $.correlationId
+              properties:
+                correlationId: $.correlationId
+                # Fixed: Extract subscriptionId from the hierarchy string
+                subscriptionId: $.properties.hierarchy
+                resourceId: $.resourceId
+                principalId: $.properties.requestbody..PrincipalId
+                principalType: $.properties.requestbody..PrincipalType
+                roleDefinitionId: $.properties.requestbody..RoleDefinitionId
+                scope: $.properties.requestbody..Scope
+                resultType: $.resultType
+                resultSignature: $.resultSignature
+                callerIpAddress: $.callerIpAddress
+                callerName: $.identity.claims.name
+                callerEmail: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
+                timestamp: $.time
+                location: $.RoleLocation
+  query: >
+      MATCH
+        (r:RoleAssignment)
+      RETURN
+        r.correlationId as correlationId,
+        r.subscriptionId as subscriptionId,
+        r.resourceId as resourceId,
+        r.principalId as principalId,
+        r.principalType as principalType,
+        r.roleDefinitionId as roleDefinitionId,
+        r.scope as scope,
+        r.resultType as resultType,
+        r.resultSignature as resultSignature,
+        r.callerIpAddress as callerIpAddress,
+        r.callerName as callerName,
+        r.callerEmail as callerEmail,
+        r.timestamp as timestamp,
+        r.location as location
