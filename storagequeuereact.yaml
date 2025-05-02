@@ -1,0 +1,14 @@
+kind: Reaction
+apiVersion: v1
+name: my-reaction
+spec:
+  kind: StorageQueue
+  properties:
+    endpoint: https://drasisqueue.queue.core.windows.net
+    queueName: drasiqueue
+    format: unpacked
+  queries:
+    azure-role-assignments:
+  identity:
+    kind: MicrosoftEntraWorkloadID
+    clientId: b6a2b7f2-427a-4cbd-8aa8-9e9aa2c13a8f

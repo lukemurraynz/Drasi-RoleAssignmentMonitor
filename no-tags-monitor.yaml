@@ -10,31 +10,22 @@ spec:
           - sourceLabel: eventhub1
         pipeline:
           - extract-role-assignments
-    middleware:
-      - kind: unwind
-        name: extract-role-assignments
-        eventhub1:        
-          insert:
-            - selector: $[?(@.category == 'Administrative' && @.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE')]
-              op: Update              
-              label: RoleAssignment
-              id: $.correlationId
-              properties:
-                correlationId: $.correlationId
-                # Fixed: Extract subscriptionId from the hierarchy string
-                subscriptionId: $.properties.hierarchy
-                resourceId: $.resourceId
-                principalId: $.properties.requestbody..PrincipalId
-                principalType: $.properties.requestbody..PrincipalType
-                roleDefinitionId: $.properties.requestbody..RoleDefinitionId
-                scope: $.properties.requestbody..Scope
-                resultType: $.resultType
-                resultSignature: $.resultSignature
-                callerIpAddress: $.callerIpAddress
-                callerName: $.identity.claims.name
-                callerEmail: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
-                timestamp: $.time
-                location: $.RoleLocation
+  middleware:
+    - id: extract-role-assignments
+      name: extract-role-assignments
+      kind: unwind
+      RoleAssignment:
+        - selector: $.records[*]
+          label: Role
+          key: $.correlationId
+          relation: HAS_ROLE
+          properties:
+            callerIpAddress: $.callerIpAddress
+            resourceId: $.resourceId
+            operationName: $.operationName
+            email: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
+            principalName: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']
+            tenantId: $.identity.claims['http://schemas.microsoft.com/identity/claims/tenantid']
   query: >
       MATCH
         (r:RoleAssignment)
