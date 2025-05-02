@@ -7,13 +7,13 @@ spec:
     subscriptions:
       - id: my-source
         nodes:
-          - sourceLabel: ActivityLog
+          - sourceLabel: eventhub1
         pipeline:
           - extract-role-assignments
     middleware:
-      - kind: map
+      - kind: unwind
         name: extract-role-assignments
-        ActivityLog:        
+        eventhub1:        
           insert:
             - selector: $[?(@.category == 'Administrative' && @.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE')]
               op: Update              
