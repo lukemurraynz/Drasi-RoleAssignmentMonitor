@@ -1,0 +1,11 @@
+kind: Reaction
+apiVersion: v1
+name: my-reactioneg
+spec:
+  kind: EventGrid
+  queries:
+    azure-role-assignments:
+  properties: 
+    eventGridUri: https://eventgridrasitopic.australiaeast-1.eventgrid.azure.net/api/events
+    eventGridKey: 4wbiAN9YbTcYEtVfoe0t6qUlonPcChqE5pBjUzP13LaCBUEquDwPJQQJ99BEACL93NaXJ3w3AAABAZEGJ9EW
+    format: packed
