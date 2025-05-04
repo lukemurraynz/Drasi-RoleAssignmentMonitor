@@ -1,0 +1,54 @@
+kind: ContinuousQuery
+apiVersion: v1
+name: azure-role-change-vmadminlogin
+spec:
+  mode: query
+  sources:    
+    subscriptions:
+      - id: my-source
+        nodes:
+          - sourceLabel: eventhub1
+        pipeline:
+          - extract-role-assignments
+  query: >
+    MATCH
+      (r:RoleAssignment)
+    WHERE
+      r.roleDefinitionId = 'b1e7c389-b1f6-4c1c-9c8e-efb5c4b8436a'
+    RETURN
+      r.correlationId as correlationId,
+      r.subscriptionId as subscriptionId,
+      r.resourceId as resourceId,
+      r.principalId as principalId,
+      r.principalType as principalType,
+      r.roleDefinitionId as roleDefinitionId,
+      r.scope as scope,
+      r.resultType as resultType,
+      r.resultSignature as resultSignature,
+      r.callerIpAddress as callerIpAddress,
+      r.callerName as callerName,
+      r.callerEmail as callerEmail,
+      r.timestamp as timestamp,
+      r.location as location
+  middleware:
+    - id: extract-role-assignments
+      name: extract-role-assignments
+      kind: unwind
+      RoleAssignment:
+        - selector: $.records[*]
+          label: Role
+          key: $.correlationId
+          relation: HAS_ROLE
+          properties:
+            callerIpAddress: $.callerIpAddress
+            resourceId: $.resourceId
+            operationName: $.operationName
+            email: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
+            principalName: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']
+            tenantId: $.identity.claims['http://schemas.microsoft.com/identity/claims/tenantid']
+    - id: notify-vmadminlogin
+      name: Notify VM Admin Login Assignment
+      kind: notify
+      selector: $.RoleAssignment[?(@.roleDefinitionId == 'b1e7c389-b1f6-4c1c-9c8e-efb5c4b8436a')]
+      message: >
+        Identity with principalId {principalId} was assigned the Virtual Machine Administrator Login role on resource {resourceId} at {timestamp}.
