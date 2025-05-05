@@ -14,7 +14,7 @@ spec:
     MATCH
       (r:RoleAssignment)
     WHERE
-      r.roleDefinitionId = 'b1e7c389-b1f6-4c1c-9c8e-efb5c4b8436a'
+      r.roleDefinitionId = '1c0163c0-47e6-4577-8991-ea5c82e286e4'
     RETURN
       r.correlationId as correlationId,
       r.subscriptionId as subscriptionId,
@@ -49,6 +49,6 @@ spec:
     - id: notify-vmadminlogin
       name: Notify VM Admin Login Assignment
       kind: notify
-      selector: $.RoleAssignment[?(@.roleDefinitionId == 'b1e7c389-b1f6-4c1c-9c8e-efb5c4b8436a')]
+      selector: $.RoleAssignment[?(@.roleDefinitionId == '1c0163c0-47e6-4577-8991-ea5c82e286e4')]
       message: >
         Identity with principalId {principalId} was assigned the Virtual Machine Administrator Login role on resource {resourceId} at {timestamp}.
