@@ -36,7 +36,7 @@ spec:
       kind: unwind
       RoleAssignment:
         - selector: $.records[*]
-          label: Role
+          label: RoleAssignment
           key: $.correlationId
           relation: HAS_ROLE
           properties:
