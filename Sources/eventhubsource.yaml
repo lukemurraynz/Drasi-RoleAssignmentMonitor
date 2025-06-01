@@ -1,6 +1,6 @@
 kind: Source
 apiVersion: v1
-name: my-source
+name: azure-role-eventhub-source
 spec:
   kind: EventHub
   properties:
