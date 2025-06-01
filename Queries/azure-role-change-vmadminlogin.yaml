@@ -3,7 +3,7 @@ apiVersion: v1
 name: azure-role-change-vmadminlogin
 spec:
   mode: query
-  sources:    
+  sources:
     subscriptions:
       - id: azure-role-eventhub-source
         nodes:
@@ -57,7 +57,7 @@ spec:
             requestBody: $.properties.requestbody
             # Try to extract parsed fields from requestbody JSON
             principalId: $.properties.requestbody.Properties.PrincipalId
-            principalType: $.properties.requestbody.Properties.PrincipalType  
+            principalType: $.properties.requestbody.Properties.PrincipalType
             roleDefinitionId: $.properties.requestbody.Properties.RoleDefinitionId
             scope: $.properties.requestbody.Properties.Scope
             roleAssignmentId: $.properties.requestbody.Id
