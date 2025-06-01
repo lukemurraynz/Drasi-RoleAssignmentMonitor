@@ -10,7 +10,7 @@ spec:
           - sourceLabel: eventhub1
         pipeline:
           - extract-role-assignments
-  query: >
+  query: |
     MATCH
       (r:RoleAssignment)
     WHERE
