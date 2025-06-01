@@ -48,13 +48,42 @@ az identity federated-credential create \
 
     ## Docker Drasi
 
-  drasi init --docker
-  drasi apply Sources/eventhubsource.yaml -f
-drasi apply -f Queries/azure-role-change-vmadminlogin.yaml 
-  drasi apply Sources/eventhubsource.yaml -f
+This section provides step-by-step instructions for setting up Drasi using Docker and managing your Drasi sources, queries, and reactions.
 
-  -
+### 1. Initialize Drasi in Docker
 
-  drasi list query
-  drasi list reaction
-  drasi list source
+```sh
+# Initialize Drasi with Docker support
+drasi init --docker
+```
+
+### 2. Apply Drasi Sources and Queries
+
+```sh
+# Apply your Event Hub source definition
+drasi apply Sources/eventhubsource.yaml -f
+
+# Apply your continuous query definition
+drasi apply -f Queries/azure-role-change-vmadminlogin.yaml
+
+# (Optional) Re-apply the Event Hub source if needed
+drasi apply Sources/eventhubsource.yaml -f
+```
+
+### 3. List Drasi Resources
+
+```sh
+# List all registered continuous queries
+drasi list query
+
+# List all registered reactions
+drasi list reaction
+
+# List all registered sources
+drasi list source
+```
+
+---
+
+- Ensure your YAML files follow the latest Drasi templates and best practices.
+- For more details, see the [Drasi documentation](https://drasi.io/) and [Drasi GitHub repositories](https://github.com/orgs/drasi-project/repositories).
