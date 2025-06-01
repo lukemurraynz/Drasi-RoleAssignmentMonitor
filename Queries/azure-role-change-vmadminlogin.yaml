@@ -37,27 +37,28 @@ spec:
     - id: extract-role-assignments
       name: extract-role-assignments
       kind: unwind
-      RoleAssignment:
-        - selector: $.records[*]
-          label: RoleAssignment
-          key: $.correlationId
-          properties:
-            callerIpAddress: $.callerIpAddress
-            resourceId: $.resourceId
-            operationName: $.operationName
-            email: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
-            principalName: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']
-            tenantId: $.identity.claims['http://schemas.microsoft.com/identity/claims/tenantid']
-            correlationId: $.correlationId
-            # Store the raw requestbody (JSON string - needs manual parsing later)
-            requestBody: $.properties.requestbody
-            # Additional properties that are directly accessible
-            callerName: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']
-            callerEmail: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
-            resultType: $.resultType
-            resultSignature: $.resultSignature
-            timestamp: $.time
-            location: $.RoleLocation
-            entity: $.properties.entity
-            hierarchy: $.properties.hierarchy
-            eventCategory: $.properties.eventCategory
+      properties:
+        RoleAssignment:
+          - selector: $.records[*]
+            label: RoleAssignment
+            key: $.correlationId
+            properties:
+              callerIpAddress: $.callerIpAddress
+              resourceId: $.resourceId
+              operationName: $.operationName
+              email: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
+              principalName: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']
+              tenantId: $.identity.claims['http://schemas.microsoft.com/identity/claims/tenantid']
+              correlationId: $.correlationId
+              # Store the raw requestbody (JSON string - needs manual parsing later)
+              requestBody: $.properties.requestbody
+              # Additional properties that are directly accessible
+              callerName: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']
+              callerEmail: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
+              resultType: $.resultType
+              resultSignature: $.resultSignature
+              timestamp: $.time
+              location: $.RoleLocation
+              entity: $.properties.entity
+              hierarchy: $.properties.hierarchy
+              eventCategory: $.properties.eventCategory
