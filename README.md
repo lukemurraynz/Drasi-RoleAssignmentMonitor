@@ -44,3 +44,11 @@ az identity federated-credential create \
     --issuer "https://australiaeast.oic.prod-aks.azure.com/2463cfda-1c0b-43f5-b6e5-1c370752bb93/2dbd79b2-4e33-43d0-bf98-3f117015a45d/" \
     --subject system:serviceaccount:"drasi-system":"reaction.my-reaction" \
     --audience api://AzureADTokenExchange
+
+
+    ## Docker Drasi
+
+  drasi init --docker
+  drasi apply Sources/eventhubsource.yaml -f
+drasi apply -f Queries/azure-role-change-vmadminlogin.yaml 
+  drasi apply Sources/eventhubsource.yaml -f
