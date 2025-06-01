@@ -17,7 +17,6 @@ spec:
       r.roleDefinitionId = '1c0163c0-47e6-4577-8991-ea5c82e286e4'
     RETURN
       r.correlationId as correlationId,
-      r.subscriptionId as subscriptionId,
       r.resourceId as resourceId,
       r.principalId as principalId,
       r.principalType as principalType,
@@ -28,6 +27,9 @@ spec:
       r.callerIpAddress as callerIpAddress,
       r.callerName as callerName,
       r.callerEmail as callerEmail,
+      r.email as email,
+      r.principalName as principalName,
+      r.tenantId as tenantId,
       r.timestamp as timestamp,
       r.location as location
   middleware:
@@ -46,9 +48,15 @@ spec:
             email: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
             principalName: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']
             tenantId: $.identity.claims['http://schemas.microsoft.com/identity/claims/tenantid']
-    - id: notify-vmadminlogin
-      name: Notify VM Admin Login Assignment
-      kind: notify
-      selector: $.RoleAssignment[?(@.roleDefinitionId == '1c0163c0-47e6-4577-8991-ea5c82e286e4')]
-      message: >
-        Identity with principalId {principalId} was assigned the Virtual Machine Administrator Login role on resource {resourceId} at {timestamp}.
+            # Extract from responseBody if available, fallback to null if not present
+            principalId: $.properties.responseBody.properties.principalId
+            principalType: $.properties.responseBody.properties.principalType
+            roleDefinitionId: $.properties.responseBody.properties.roleDefinitionId
+            scope: $.properties.responseBody.properties.scope
+            # Additional properties for the query
+            callerName: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']
+            callerEmail: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
+            resultType: $.resultType
+            resultSignature: $.resultSignature
+            timestamp: $.time
+            location: $.RoleLocation
