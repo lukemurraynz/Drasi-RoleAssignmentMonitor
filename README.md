@@ -52,3 +52,9 @@ az identity federated-credential create \
   drasi apply Sources/eventhubsource.yaml -f
 drasi apply -f Queries/azure-role-change-vmadminlogin.yaml 
   drasi apply Sources/eventhubsource.yaml -f
+
+  -
+
+  drasi list query
+  drasi list reaction
+  drasi list source
