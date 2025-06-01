@@ -12,25 +12,7 @@ spec:
           - extract-role-assignments
   query: |
     MATCH (r:RoleAssignment)
-    WHERE r.requestBody IS NOT NULL AND r.requestBody CONTAINS '1c0163c0-47e6-4577-8991-ea5c82e286e4'
-    RETURN
-      r.correlationId AS correlationId,
-      r.resourceId AS resourceId,
-      r.requestBody AS requestBody,
-      r.resultType AS resultType,
-      r.resultSignature AS resultSignature,
-      r.callerIpAddress AS callerIpAddress,
-      r.callerName AS callerName,
-      r.callerEmail AS callerEmail,
-      r.email AS email,
-      r.principalName AS principalName,
-      r.tenantId AS tenantId,
-      r.timestamp AS timestamp,
-      r.location AS location,
-      r.entity AS entity,
-      r.hierarchy AS hierarchy,
-      r.eventCategory AS eventCategory,
-      r.operationName AS operationName
+    RETURN r.correlationId AS correlationId
   middleware:
     - id: extract-role-assignments
       name: extract-role-assignments
@@ -48,9 +30,7 @@ spec:
               principalName: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']
               tenantId: $.identity.claims['http://schemas.microsoft.com/identity/claims/tenantid']
               correlationId: $.correlationId
-              # Store the raw requestbody (JSON string - needs manual parsing later)
               requestBody: $.properties.requestbody
-              # Additional properties that are directly accessible
               callerName: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']
               callerEmail: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
               resultType: $.resultType

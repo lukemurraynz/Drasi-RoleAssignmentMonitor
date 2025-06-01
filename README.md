@@ -67,7 +67,7 @@ drasi apply Sources/eventhubsource.yaml -f
 drasi apply -f Queries/azure-role-change-vmadminlogin.yaml
 
 # (Optional) Re-apply the Event Hub source if needed
-drasi apply Sources/eventhubsource.yaml -f
+drasi apply Reactions/azure-role-change-vmadminloginaction.yaml -f
 ```
 
 ### 3. List Drasi Resources
