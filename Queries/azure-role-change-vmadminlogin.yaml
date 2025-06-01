@@ -14,7 +14,7 @@ spec:
     MATCH
       (r:RoleAssignment)
     WHERE
-      r.roleDefinitionId = '1c0163c0-47e6-4577-8991-ea5c82e286e4'
+      r.roleDefinitionId = '/providers/Microsoft.Authorization/roleDefinitions/1c0163c0-47e6-4577-8991-ea5c82e286e4'
     RETURN
       r.correlationId as correlationId,
       r.resourceId as resourceId,
@@ -22,6 +22,8 @@ spec:
       r.principalType as principalType,
       r.roleDefinitionId as roleDefinitionId,
       r.scope as scope,
+      r.roleAssignmentId as roleAssignmentId,
+      r.requestBody as requestBody,
       r.resultType as resultType,
       r.resultSignature as resultSignature,
       r.callerIpAddress as callerIpAddress,
@@ -31,7 +33,11 @@ spec:
       r.principalName as principalName,
       r.tenantId as tenantId,
       r.timestamp as timestamp,
-      r.location as location
+      r.location as location,
+      r.entity as entity,
+      r.hierarchy as hierarchy,
+      r.eventCategory as eventCategory,
+      r.operationName as operationName
   middleware:
     - id: extract-role-assignments
       name: extract-role-assignments
@@ -40,7 +46,6 @@ spec:
         - selector: $.records[*]
           label: RoleAssignment
           key: $.correlationId
-          relation: HAS_ROLE
           properties:
             callerIpAddress: $.callerIpAddress
             resourceId: $.resourceId
@@ -48,15 +53,22 @@ spec:
             email: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
             principalName: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']
             tenantId: $.identity.claims['http://schemas.microsoft.com/identity/claims/tenantid']
-            # Extract from responseBody if available, fallback to null if not present
-            principalId: $.properties.responseBody.properties.principalId
-            principalType: $.properties.responseBody.properties.principalType
-            roleDefinitionId: $.properties.responseBody.properties.roleDefinitionId
-            scope: $.properties.responseBody.properties.scope
-            # Additional properties for the query
+            # Store the raw requestbody for fallback
+            requestBody: $.properties.requestbody
+            # Try to extract parsed fields from requestbody JSON
+            principalId: $.properties.requestbody.Properties.PrincipalId
+            principalType: $.properties.requestbody.Properties.PrincipalType  
+            roleDefinitionId: $.properties.requestbody.Properties.RoleDefinitionId
+            scope: $.properties.requestbody.Properties.Scope
+            roleAssignmentId: $.properties.requestbody.Id
+            # Additional properties
             callerName: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']
             callerEmail: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
             resultType: $.resultType
             resultSignature: $.resultSignature
             timestamp: $.time
             location: $.RoleLocation
+            # Extract entity and hierarchy from properties
+            entity: $.properties.entity
+            hierarchy: $.properties.hierarchy
+            eventCategory: $.properties.eventCategory
