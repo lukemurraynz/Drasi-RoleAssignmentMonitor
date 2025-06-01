@@ -4,8 +4,7 @@ name: my-source
 spec:
   kind: EventHub
   properties:
-    connectionString: 
-      kind: Secret
-      name: eventhub-creds
-      key: eventHubConnectionString
+    connectionString: Endpoint=sb://drasitestluke.servicebus.windows.net/;SharedAccessKeyName=test;SharedAccessKey=n5cZrSTt/+IBGN+Wx+QkrXrxw0DPcP+ry+AEhET6who=;EntityPath=eventhub1
+    eventHubs:
+      - eventhub1
     bootstrapWindow: 5
