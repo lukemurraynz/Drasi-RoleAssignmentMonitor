@@ -5,7 +5,7 @@ spec:
   mode: query
   sources:    
     subscriptions:
-      - id: my-source
+      - id: azure-role-eventhub-source
         nodes:
           - sourceLabel: eventhub1
         pipeline:
