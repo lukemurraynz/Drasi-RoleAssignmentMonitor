@@ -11,9 +11,8 @@ spec:
         pipeline:
           - extract-role-assignments
   query: |
-    // Find RoleAssignment events where the requestBody contains the target role GUID
     MATCH (r:RoleAssignment)
-    WHERE r.requestBody IS NOT NULL AND r.requestBody CONTAINS '1c0163c0-47e6-4577-8991-ea5c82e286e4'
+    WHERE r.requestBody IS NOT NULL AND toString(r.requestBody) CONTAINS '1c0163c0-47e6-4577-8991-ea5c82e286e4'
     RETURN
       r.correlationId AS correlationId,
       r.resourceId AS resourceId,
