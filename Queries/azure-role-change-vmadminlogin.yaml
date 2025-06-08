@@ -10,33 +10,13 @@ spec:
           - sourceLabel: eventhub1
         pipeline:
           - extract-role-assignments
-  query: |
-    MATCH (r:RoleAssignment)
-    RETURN r.correlationId AS correlationId
-  middleware:
-    - id: extract-role-assignments
-      name: extract-role-assignments
-      kind: unwind
-      properties:
-        RoleAssignment:
+    middleware:
+      - name: extract-role-assignments
+        kind: unwind
+        eventhub1:        
           - selector: $.records[*]
             label: RoleAssignment
             key: $.correlationId
-            properties:
-              callerIpAddress: $.callerIpAddress
-              resourceId: $.resourceId
-              operationName: $.operationName
-              email: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
-              principalName: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']
-              tenantId: $.identity.claims['http://schemas.microsoft.com/identity/claims/tenantid']
-              correlationId: $.correlationId
-              requestBody: $.properties.requestbody
-              callerName: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name']
-              callerEmail: $.identity.claims['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
-              resultType: $.resultType
-              resultSignature: $.resultSignature
-              timestamp: $.time
-              location: $.RoleLocation
-              entity: $.properties.entity
-              hierarchy: $.properties.hierarchy
-              eventCategory: $.properties.eventCategory
+  query: |
+    MATCH (r:RoleAssignment)
+    RETURN r.correlationId AS correlationId

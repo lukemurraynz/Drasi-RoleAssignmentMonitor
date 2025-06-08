@@ -4,7 +4,7 @@ name: azure-role-eventhub-source
 spec:
   kind: EventHub
   properties:
-    connectionString: Endpoint=sb://drasitestluke.servicebus.windows.net/;SharedAccessKeyName=test;SharedAccessKey=n5cZrSTt/+IBGN+Wx+QkrXrxw0DPcP+ry+AEhET6who=;EntityPath=eventhub1
+    connectionString: Endpoint=sb://drasitestluke.servicebus.windows.net/;SharedAccessKeyName=test;SharedAccessKey=ah569HFazHLYPw3Kgp4GIW7VYFJxPTpM1+AEhHF7/TU=;EntityPath=eventhub1
     eventHubs:
       - eventhub1
     bootstrapWindow: 5
