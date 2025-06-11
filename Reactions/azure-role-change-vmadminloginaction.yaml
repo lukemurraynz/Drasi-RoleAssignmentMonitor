@@ -1,3 +1,4 @@
+---
 kind: Reaction
 apiVersion: v1
 name: my-reactionvmlogin
@@ -5,7 +6,9 @@ spec:
   kind: EventGrid
   queries:
     azure-role-change-vmadminlogin:
-  properties: 
-    eventGridUri: https://eventgridrasitopic.australiaeast-1.eventgrid.azure.net/api/events
-    eventGridKey: 4wbiAN9YbTcYEtVfoe0t6qUlonPcChqE5pBjUzP13LaCBUEquDwPJQQJ99BEACL93NaXJ3w3AAABAZEGJ9EW
+  properties:
+    eventGridUri: >-
+      https://eventgridrasitopic.australiaeast-1.eventgrid.azure.net/api/events
+    eventGridKey: >-
+      4wbiAN9YbTcYEtVfoe0t6qUlonPcChqE5pBjUzP13LaCBUEquDwPJQQJ99BEACL93NaXJ3w3AAABAZEGJ9EW
     format: unpacked

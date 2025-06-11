@@ -1,3 +1,4 @@
+---
 kind: Source
 apiVersion: v1
 name: azure-role-eventhub-source
