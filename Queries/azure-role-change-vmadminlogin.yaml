@@ -20,7 +20,8 @@ spec:
             key: $.correlationId
   query: |
     MATCH (r:RoleAssignment)
-    WHERE r.resultType = 'Success'
+    WHERE r.operationName = 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE'
+    AND r.resultType = 'Success'
     RETURN
       r.correlationId AS correlationId,
       r.time AS timestamp,
