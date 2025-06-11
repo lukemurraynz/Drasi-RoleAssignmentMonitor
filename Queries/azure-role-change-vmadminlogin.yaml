@@ -23,6 +23,8 @@ spec:
     RETURN
       r.correlationId AS correlationId,
       r.RoleLocation AS roleLocation,
+      r.Stamp AS stamp,
+      r.ReleaseVersion AS releaseVersion,
       r.time AS timestamp,
       r.resourceId AS resourceId,
       r.operationName AS operationName,
