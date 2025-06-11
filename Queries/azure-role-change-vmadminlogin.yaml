@@ -19,5 +19,4 @@ spec:
             key: $.correlationId
   query: |
     MATCH (r:RoleAssignment)
-    RETURN r.properties.requestbody AS eventcategory,
-     r.correlationId AS correlationId
+    RETURN  r.correlationId AS correlationId
