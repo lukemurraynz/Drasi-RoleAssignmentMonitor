@@ -11,7 +11,6 @@ spec:
           - sourceLabel: eventhub1
         pipeline:
           - extract-role-assignments
-          - extract-authorization-data
     middleware:
       - name: extract-role-assignments
         kind: unwind
@@ -19,17 +18,10 @@ spec:
           - selector: $.records[*]
             label: RoleAssignment
             key: $.correlationId
-      - name: extract-authorization-data
-        kind: unwind
-        RoleAssignment:
-          - selector: $.properties
-            label: RoleProperties
-            key: $.requestbody
   query: |
-    MATCH (r:RoleAssignment)--(p:RoleProperties)
+    MATCH (r:RoleAssignment)
     WHERE r.operationName = 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE'
     AND r.resultType = 'Success'
-    AND p.requestbody CONTAINS '1c0163c0-47e6-4577-8991-ea5c82e286e4'
     RETURN
       r.correlationId AS correlationId,
       r.time AS timestamp,
@@ -39,5 +31,5 @@ spec:
       r.RoleLocation AS roleLocation,
       r.callerIpAddress AS callerIpAddress,
       r.tenantId AS tenantId,
-      p.requestbody AS requestBody,
-      r.identity AS identity
+      r.identity AS identity,
+      r.properties AS properties
