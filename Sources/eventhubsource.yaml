@@ -3,8 +3,11 @@ apiVersion: v1
 name: azure-role-eventhub-source
 spec:
   kind: EventHub
+  identity:
+    kind: MicrosoftEntraWorkloadID
+    clientId: b6a2b7f2-427a-4cbd-8aa8-9e9aa2c13a8f
   properties:
-    connectionString: Endpoint=sb://drasitestluke.servicebus.windows.net/;SharedAccessKeyName=test;SharedAccessKey=ah569HFazHLYPw3Kgp4GIW7VYFJxPTpM1+AEhHF7/TU=;EntityPath=eventhub1
+    host: drasitestluke.servicebus.windows.net
     eventHubs:
       - eventhub1
     bootstrapWindow: 5
