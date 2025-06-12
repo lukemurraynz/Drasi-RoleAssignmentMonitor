@@ -1,41 +1,74 @@
-{
-  "id": "2d1781af-3a4c-4d7c-bd0c-e34b19da4e66",
-  "source": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/myResourceGroup/providers/Microsoft.EventGrid/topics/myTopic",
-  "specversion": "1.0",
-  "type": "Microsoft.EventGrid.SubscriptionValidationEvent",
-  "subject": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/myResourceGroup/providers/Microsoft.Authorization/roleAssignments/ab123456-1234-1234-1234-123456789012",
-  "time": "2023-01-01T00:00:00Z",
-  "data": {
-    "correlationId": "correlation-123",
-    "timestamp": "2023-01-01T00:00:00Z",
-    "resourceId": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/myVM",
-    "operationName": "MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE",
-    "resultType": "Start",
-    "callerIpAddress": "192.168.1.100",
-    "tenantId": "tenant-123",
-    "identity": {
-      "authorization": {
-        "scope": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/myVM",
-        "action": "Microsoft.Authorization/roleAssignments/write",
-        "evidence": {
-          "role": "Owner"
-        }
-      },
-      "claims": {
-        "aud": "https://management.azure.com/",
-        "iss": "https://sts.windows.net/tenant-123/",
-        "name": "John Doe",
-        "upn": "john.doe@contoso.com"
+[
+  {
+    "id": "example-event-bastion",
+    "eventType": "Microsoft.EventGrid.Drasi.RoleAssignment",
+    "subject": "drasi/role-assignments/vm-admin-login",
+    "eventTime": "2024-01-10T14:00:00.000Z",
+    "data": {
+      "operationName": "Microsoft.Authorization/roleAssignments/write",
+      "resultType": "Start",
+      "resourceId": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-example/providers/Microsoft.Compute/virtualMachines/vm-example",
+      "correlationId": "550e8400-e29b-41d4-a716-446655440001",
+      "timestamp": "2024-01-10T14:00:00.000Z",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "properties": {
+        "entity": {
+          "roleDefinitionId": "/subscriptions/12345678-1234-1234-1234-123456789012/providers/Microsoft.Authorization/roleDefinitions/1c0163c0-47e6-4577-8991-ea5c82e286e4",
+          "principalId": "22222222-2222-2222-2222-222222222222",
+          "principalType": "User"
+        },
+        "scope": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-example/providers/Microsoft.Compute/virtualMachines/vm-example"
       }
     },
-    "properties": {
-      "entity": {
-        "roleDefinitionId": "/subscriptions/12345678-1234-1234-1234-123456789012/providers/Microsoft.Authorization/roleDefinitions/1c0163c0-47e6-4577-8991-ea5c82e286e4",
-        "principalId": "user-principal-id-123",
-        "principalType": "User"
-      },
-      "eventCategory": "Administrative",
-      "resultSignature": "Started"
-    }
+    "dataVersion": "1.0",
+    "metadataVersion": "1"
+  },
+  {
+    "id": "example-event-storage",
+    "eventType": "Microsoft.EventGrid.Drasi.RoleAssignment",
+    "subject": "drasi/role-assignments/storage-blob-contributor",
+    "eventTime": "2024-01-10T14:05:00.000Z",
+    "data": {
+      "operationName": "Microsoft.Authorization/roleAssignments/write",
+      "resultType": "Start",
+      "resourceId": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-storage/providers/Microsoft.Storage/storageAccounts/storageexample",
+      "correlationId": "550e8400-e29b-41d4-a716-446655440002",
+      "timestamp": "2024-01-10T14:05:00.000Z",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "properties": {
+        "entity": {
+          "roleDefinitionId": "/subscriptions/12345678-1234-1234-1234-123456789012/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+          "principalId": "33333333-3333-3333-3333-333333333333",
+          "principalType": "User"
+        },
+        "scope": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-storage"
+      }
+    },
+    "dataVersion": "1.0",
+    "metadataVersion": "1"
+  },
+  {
+    "id": "example-event-subscription-level",
+    "eventType": "Microsoft.EventGrid.Drasi.RoleAssignment",
+    "subject": "drasi/role-assignments/vm-admin-subscription",
+    "eventTime": "2024-01-10T14:10:00.000Z",
+    "data": {
+      "operationName": "Microsoft.Authorization/roleAssignments/write",
+      "resultType": "Start",
+      "resourceId": "/subscriptions/12345678-1234-1234-1234-123456789012",
+      "correlationId": "550e8400-e29b-41d4-a716-446655440003",
+      "timestamp": "2024-01-10T14:10:00.000Z",
+      "tenantId": "11111111-1111-1111-1111-111111111111",
+      "properties": {
+        "entity": {
+          "roleDefinitionId": "/subscriptions/12345678-1234-1234-1234-123456789012/providers/Microsoft.Authorization/roleDefinitions/1c0163c0-47e6-4577-8991-ea5c82e286e4",
+          "principalId": "44444444-4444-4444-4444-444444444444",
+          "principalType": "User"
+        },
+        "scope": "/subscriptions/12345678-1234-1234-1234-123456789012"
+      }
+    },
+    "dataVersion": "1.0",
+    "metadataVersion": "1"
   }
-}
+]

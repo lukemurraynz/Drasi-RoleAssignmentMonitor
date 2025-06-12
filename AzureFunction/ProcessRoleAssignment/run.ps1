@@ -3,10 +3,8 @@ using namespace System.Net
 # Input bindings are passed in via param block.
 param($eventGridEvent, $TriggerMetadata)
 
-# Import required modules and helper functions
-. "$PSScriptRoot\..\Modules\BastionManager.ps1"
-. "$PSScriptRoot\..\Modules\RoleProcessor.ps1"
-. "$PSScriptRoot\..\Modules\Logger.ps1"
+# Import the new modular role assignment engine
+. "$PSScriptRoot\..\Modules\RoleAssignmentEngine.ps1"
 
 try {
     Write-LogInfo "Processing Event Grid event: $($eventGridEvent.id)"
@@ -26,60 +24,38 @@ try {
     
     Write-LogInfo "Processing role assignment - Operation: $($roleAssignment.operationName), Resource: $($roleAssignment.resourceId)"
     
-    # Check if this is a VM Administrator Login role assignment
-    $vmAdminRoleId = $env:VM_ADMIN_ROLE_ID
-    $isVMAdminRole = Test-VMAdminRoleAssignment -RoleAssignment $roleAssignment -VMAdminRoleId $vmAdminRoleId
+    # Initialize the role assignment engine
+    $engine = Initialize-RoleAssignmentEngine
     
-    if (-not $isVMAdminRole) {
-        Write-LogInfo "Event is not for VM Administrator Login role, skipping"
-        return
+    if (-not $engine.Initialized) {
+        Write-LogError "Failed to initialize role assignment engine"
+        throw "Engine initialization failed"
     }
     
-    # Extract resource information
-    $resourceInfo = Get-ResourceInformation -ResourceId $roleAssignment.resourceId
+    Write-LogInfo "Role assignment engine initialized successfully"
     
-    if (-not $resourceInfo) {
-        Write-LogError "Unable to parse resource information from: $($roleAssignment.resourceId)"
-        return
-    }
+    # Process the role assignment event through the engine
+    $result = Process-RoleAssignmentEvent -RoleAssignment $roleAssignment -Engine $engine
     
-    Write-LogInfo "Resource Type: $($resourceInfo.Type), Resource Group: $($resourceInfo.ResourceGroup), Subscription: $($resourceInfo.SubscriptionId)"
-    
-    # Only process VM-related resources
-    if ($resourceInfo.Type -ne "Microsoft.Compute/virtualMachines") {
-        Write-LogInfo "Resource is not a virtual machine, skipping Bastion management"
-        return
-    }
-    
-    # Determine the operation type
-    $isRoleAssigned = $roleAssignment.operationName -like "*WRITE*" -and $roleAssignment.resultType -eq "Start"
-    $isRoleRemoved = $roleAssignment.operationName -like "*DELETE*" -and $roleAssignment.resultType -eq "Start"
-    
-    if ($isRoleAssigned) {
-        Write-LogInfo "VM Administrator Login role assigned - Creating/Ensuring Bastion exists"
-        $result = Invoke-BastionCreation -SubscriptionId $resourceInfo.SubscriptionId -ResourceGroupName $resourceInfo.ResourceGroup -VirtualMachineName $resourceInfo.Name
+    if ($result.Success) {
+        Write-LogInfo "Event processing completed successfully: $($result.Message)"
         
-        if ($result.Success) {
-            Write-LogInfo "Bastion operation completed successfully: $($result.Message)"
-        } else {
-            Write-LogError "Bastion creation failed: $($result.Message)"
+        if ($result.ActionsExecuted) {
+            $successfulActions = ($result.ActionsExecuted | Where-Object { $_.Success }).Count
+            $totalActions = $result.ActionsExecuted.Count
+            Write-LogInfo "Actions summary: $successfulActions of $totalActions executed successfully"
+            
+            # Log any failed actions
+            $failedActions = $result.ActionsExecuted | Where-Object { -not $_.Success }
+            foreach ($failedAction in $failedActions) {
+                Write-LogWarning "Action failed: $($failedAction.Message)"
+            }
         }
-    }
-    elseif ($isRoleRemoved) {
-        Write-LogInfo "VM Administrator Login role removed - Checking if Bastion should be removed"
-        $result = Invoke-BastionCleanup -SubscriptionId $resourceInfo.SubscriptionId -ResourceGroupName $resourceInfo.ResourceGroup -VirtualMachineName $resourceInfo.Name
-        
-        if ($result.Success) {
-            Write-LogInfo "Bastion cleanup completed successfully: $($result.Message)"
-        } else {
-            Write-LogError "Bastion cleanup failed: $($result.Message)"
-        }
-    }
-    else {
-        Write-LogInfo "Operation is not a role assignment or removal, skipping"
+    } else {
+        Write-LogError "Event processing failed: $($result.Message)"
     }
     
-    Write-LogInfo "Event processing completed successfully"
+    Write-LogInfo "Event processing workflow completed"
 }
 catch {
     Write-LogError "Error processing Event Grid event: $($_.Exception.Message)"

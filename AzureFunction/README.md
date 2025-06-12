@@ -1,53 +1,59 @@
-# Azure Function for Drasi-based Bastion Management
+# Azure Function for Drasi-based Role Assignment Automation
 
-This Azure Function extends the Drasi role assignment monitoring system to automatically manage Azure Bastion resources based on VM Administrator Login role assignments.
+This Azure Function provides a modular, extensible engine for automating Azure resource management based on role assignment events from Drasi. Inspired by [Bellhop](https://github.com/Azure/bellhop), it uses an event-driven architecture to respond to role assignments with appropriate resource provisioning.
 
 ## Overview
 
-The solution follows an event-driven architecture inspired by [Bellhop](https://github.com/Azure/bellhop) but uses Drasi reactions and Event Grid instead of tags and schedules:
+The solution follows an event-driven architecture with modular handlers for different roles and resources:
 
 ```
-Azure Activity Logs → Event Hub → Drasi Source → Continuous Query → Reaction → Event Grid → Azure Function → Bastion Management
+Azure Activity Logs → Event Hub → Drasi Source → Continuous Query → Reaction → Event Grid → Azure Function → Resource Management
 ```
 
 ## Architecture
 
-### Components
+### Core Engine Components
 
-1. **ProcessRoleAssignment Function**: Event Grid-triggered function that processes role assignment events
-2. **BastionManager Module**: Core logic for creating and managing Azure Bastion hosts
-3. **RoleProcessor Module**: Handles role assignment event parsing and validation
-4. **ResourceManager Module**: Extensible framework for managing different Azure resources
-5. **ConfigurationManager Module**: Centralized configuration management
-6. **Logger Module**: Structured logging for monitoring and troubleshooting
+1. **ProcessRoleAssignment Function**: Event Grid-triggered entry point
+2. **RoleAssignmentEngine Module**: Main orchestrator that routes role events to appropriate handlers
+3. **Handler Modules**: Specialized modules for different resource types and roles
+4. **ConfigurationManager Module**: Extensible role-to-action mapping
+5. **Logger Module**: Structured logging for monitoring and troubleshooting
+
+### Handler Modules (Extensible)
+
+- **BastionHandler**: Manages Azure Bastion creation/removal for VM Administrator Login roles
+- **LoggingHandler**: Provides audit logging and telemetry for all role assignments
+- **StorageHandler**: Example handler for Storage Account Blob Contributor roles (placeholder)
+- **[Future Handlers]**: Easy to add new handlers for additional roles and resources
 
 ### Design Principles
 
-Following the Azure Well-Architected Framework:
+Following the Azure Well-Architected Framework and Bellhop-inspired patterns:
 
 - **Security**: Uses managed identity, least privilege access, secure configuration
 - **Reliability**: Comprehensive error handling, retry logic, validation
 - **Performance**: Efficient processing, appropriate scaling with consumption plan
 - **Cost**: Right-sized resources, cleanup automation to prevent waste
 - **Operational Excellence**: Detailed logging, monitoring, automated deployment
+- **Extensibility**: Modular design allows easy addition of new roles and resources
 
 ## Features
 
 ### Core Functionality
 
-- **Automatic Bastion Creation**: Creates Azure Bastion when VM Administrator Login role is assigned
-- **Intelligent Cleanup**: Removes Bastion only when no other VMs in the VNet have admin roles
-- **VNet Integration**: Automatically detects VM's VNet and creates appropriate subnets
+- **Event-Driven Automation**: Responds to any configured role assignment event
+- **Modular Role Processing**: Extensible engine routes different roles to appropriate handlers
+- **Smart Resource Management**: Creates resources only when needed, with intelligent cleanup
 - **Resource Validation**: Validates prerequisites before attempting operations
+- **Flexible Deployment**: Supports resource group, subscription, and resource-level assignments
 
-### Extensibility
+### Bastion Management (Example Implementation)
 
-The solution is designed for extensibility:
-
-- **Role-Based Actions**: Easy to add new roles and associated actions
-- **Resource Types**: Framework supports additional Azure resource types
-- **Configuration-Driven**: Behavior controlled through environment variables
-- **Modular Design**: Clean separation of concerns for maintainability
+- **Automatic Creation**: Creates Azure Bastion when VM Administrator Login role is assigned
+- **Intelligent Cleanup**: Removes Bastion only when no other assignments require it
+- **VNet Integration**: Automatically integrates with existing VNets or creates new ones
+- **Location Flexibility**: Deploys Bastion without requiring specific VM references
 
 ### Security & Monitoring
 
@@ -251,47 +257,117 @@ az functionapp config appsettings set \
 
 ## Extensibility
 
+The modular engine architecture makes it easy to add support for new roles and resources.
+
 ### Adding New Roles
 
-1. **Update configuration** in `ConfigurationManager.ps1`:
+1. **Update Configuration** in `ConfigurationManager.ps1`:
    ```powershell
-   "new-role-id" = @{
-       Name = "New Role Name"
-       SupportedResourceTypes = @("Microsoft.Compute/virtualMachines")
+   StorageBlobContributor = @{
+       RoleId = "ba92f5b4-2d11-453d-a403-e96b0029c9fe"
        Actions = @{
-           Assigned = @("CreateSomeResource")
-           Removed = @("CleanupSomeResource")
+           OnAssigned = @("CreateStorageAccount", "LogAssignment")
+           OnRemoved = @("EvaluateStorageRemoval", "LogRemoval")
+       }
+       ResourceTypes = @("Microsoft.Storage/storageAccounts", "Microsoft.Resources/subscriptions", "Microsoft.Resources/resourceGroups")
+   }
+   ```
+
+2. **Create Handler Module** (e.g., `StorageHandler.ps1`):
+   ```powershell
+   function Invoke-StorageHandler {
+       param([hashtable]$Parameters)
+       
+       switch ($Parameters.Action) {
+           "CreateStorageAccount" { 
+               return Invoke-StorageAccountCreation -RoleInfo $Parameters.RoleInfo -Configuration $Parameters.Configuration
+           }
+           "EvaluateStorageRemoval" { 
+               return Invoke-StorageAccountRemovalEvaluation -RoleInfo $Parameters.RoleInfo -Configuration $Parameters.Configuration
+           }
        }
    }
    ```
 
-2. **Implement handlers** in `ResourceManager.ps1`:
+3. **Update Action Mapping** in `RoleAssignmentEngine.ps1`:
    ```powershell
-   function Invoke-SomeResourceOperation {
-       # Implementation here
+   $actionMap = @{
+       "CreateStorageAccount" = "StorageHandler"
+       "EvaluateStorageRemoval" = "StorageHandler"
+       # ... other mappings
    }
    ```
 
-### Adding New Resource Types
+4. **Register Handler** in `Get-AvailableHandlers`:
+   ```powershell
+   $handlerFiles = @(
+       "$PSScriptRoot\BastionHandler.ps1"
+       "$PSScriptRoot\LoggingHandler.ps1"
+       "$PSScriptRoot\StorageHandler.ps1"
+       "$PSScriptRoot\YourNewHandler.ps1"  # Add here
+   )
+   ```
 
-1. **Add resource type** to `ResourceManager.ps1`
-2. **Implement operations** (Create, Delete, Update, Validate)
-3. **Add configuration** in `ConfigurationManager.ps1`
-4. **Update role mappings** to include new resource type
+### Example: Network Security Group Handler
 
-### Example: Adding NSG Rule Management
+For managing NSG rules based on Network Contributor role assignments:
 
 ```powershell
-# In ResourceManager.ps1
-function Invoke-NetworkSecurityGroupOperation {
-    param($Operation, $Parameters)
+# NetworkHandler.ps1
+function Invoke-NetworkHandler {
+    param([hashtable]$Parameters)
     
-    switch ($Operation) {
-        "Create" { 
-            # Add security rules for admin access
+    switch ($Parameters.Action) {
+        "ConfigureNetworkRules" {
+            # Add NSG rules for network access
+            return New-NetworkSecurityRules -RoleInfo $Parameters.RoleInfo
         }
-        "Delete" { 
-            # Remove security rules
+        "RemoveNetworkRules" {
+            # Remove NSG rules when role is removed
+            return Remove-NetworkSecurityRules -RoleInfo $Parameters.RoleInfo
+        }
+    }
+}
+```
+
+### Supported Role Examples
+
+The engine currently supports:
+
+1. **VM Administrator Login** (`1c0163c0-47e6-4577-8991-ea5c82e286e4`)
+   - Creates Azure Bastion for VM access
+   - Intelligent cleanup when no longer needed
+
+2. **Storage Blob Contributor** (`ba92f5b4-2d11-453d-a403-e96b0029c9fe`) - *Placeholder*
+   - Could create/configure storage accounts
+   - Manage access policies and security settings
+
+3. **Network Contributor** (`4d97b98b-1d4f-4787-a291-c67834d212e7`) - *Placeholder*
+   - Could configure network security rules
+   - Manage VNet configurations
+
+### Configuration Examples
+
+Environment variables for role configuration:
+
+```bash
+# VM Administrator Login role (default)
+VM_ADMIN_ROLE_ID=1c0163c0-47e6-4577-8991-ea5c82e286e4
+
+# Storage Blob Contributor role
+STORAGE_BLOB_CONTRIBUTOR_ROLE_ID=ba92f5b4-2d11-453d-a403-e96b0029c9fe
+
+# Network Contributor role
+NETWORK_CONTRIBUTOR_ROLE_ID=4d97b98b-1d4f-4787-a291-c67834d212e7
+
+# Default location for resource creation
+DEFAULT_AZURE_LOCATION="Australia East"
+
+# Bastion-specific settings
+BASTION_SKU=Basic
+BASTION_SUBNET_SIZE=26
+BASTION_AUTO_CLEANUP=true
+```
         }
     }
 }

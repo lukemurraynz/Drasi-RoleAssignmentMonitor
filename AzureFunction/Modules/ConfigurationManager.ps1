@@ -28,7 +28,7 @@ function Get-FunctionConfiguration {
             DefaultLocation = $env:DEFAULT_AZURE_LOCATION ?? "Australia East"
         }
         
-        # Role-specific settings
+        # Role-specific settings - Extensible configuration for multiple roles and actions
         Roles = @{
             VMAdminLogin = @{
                 RoleId = $env:VM_ADMIN_ROLE_ID ?? "1c0163c0-47e6-4577-8991-ea5c82e286e4"
@@ -36,7 +36,23 @@ function Get-FunctionConfiguration {
                     OnAssigned = @("CreateBastion", "LogAssignment")
                     OnRemoved = @("EvaluateBastionRemoval", "LogRemoval")
                 }
-                ResourceTypes = @("Microsoft.Compute/virtualMachines")
+                ResourceTypes = @("Microsoft.Compute/virtualMachines", "Microsoft.Resources/subscriptions", "Microsoft.Resources/resourceGroups")
+            }
+            StorageBlobContributor = @{
+                RoleId = $env:STORAGE_BLOB_CONTRIBUTOR_ROLE_ID ?? "ba92f5b4-2d11-453d-a403-e96b0029c9fe"
+                Actions = @{
+                    OnAssigned = @("CreateStorageAccount", "LogAssignment")
+                    OnRemoved = @("EvaluateStorageRemoval", "LogRemoval")
+                }
+                ResourceTypes = @("Microsoft.Storage/storageAccounts", "Microsoft.Resources/subscriptions", "Microsoft.Resources/resourceGroups")
+            }
+            NetworkContributor = @{
+                RoleId = $env:NETWORK_CONTRIBUTOR_ROLE_ID ?? "4d97b98b-1d4f-4787-a291-c67834d212e7"
+                Actions = @{
+                    OnAssigned = @("ConfigureNetworkRules", "LogAssignment")
+                    OnRemoved = @("RemoveNetworkRules", "LogRemoval")
+                }
+                ResourceTypes = @("Microsoft.Network/virtualNetworks", "Microsoft.Network/networkSecurityGroups", "Microsoft.Resources/subscriptions", "Microsoft.Resources/resourceGroups")
             }
         }
         
