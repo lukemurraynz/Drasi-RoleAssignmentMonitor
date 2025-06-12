@@ -1,0 +1,41 @@
+{
+  "id": "2d1781af-3a4c-4d7c-bd0c-e34b19da4e66",
+  "source": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/myResourceGroup/providers/Microsoft.EventGrid/topics/myTopic",
+  "specversion": "1.0",
+  "type": "Microsoft.EventGrid.SubscriptionValidationEvent",
+  "subject": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/myResourceGroup/providers/Microsoft.Authorization/roleAssignments/ab123456-1234-1234-1234-123456789012",
+  "time": "2023-01-01T00:00:00Z",
+  "data": {
+    "correlationId": "correlation-123",
+    "timestamp": "2023-01-01T00:00:00Z",
+    "resourceId": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/myVM",
+    "operationName": "MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE",
+    "resultType": "Start",
+    "callerIpAddress": "192.168.1.100",
+    "tenantId": "tenant-123",
+    "identity": {
+      "authorization": {
+        "scope": "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/myVM",
+        "action": "Microsoft.Authorization/roleAssignments/write",
+        "evidence": {
+          "role": "Owner"
+        }
+      },
+      "claims": {
+        "aud": "https://management.azure.com/",
+        "iss": "https://sts.windows.net/tenant-123/",
+        "name": "John Doe",
+        "upn": "john.doe@contoso.com"
+      }
+    },
+    "properties": {
+      "entity": {
+        "roleDefinitionId": "/subscriptions/12345678-1234-1234-1234-123456789012/providers/Microsoft.Authorization/roleDefinitions/1c0163c0-47e6-4577-8991-ea5c82e286e4",
+        "principalId": "user-principal-id-123",
+        "principalType": "User"
+      },
+      "eventCategory": "Administrative",
+      "resultSignature": "Started"
+    }
+  }
+}
