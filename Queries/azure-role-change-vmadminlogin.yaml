@@ -1,3 +1,4 @@
+---
 kind: ContinuousQuery
 apiVersion: v1
 name: azure-role-change-vmadminlogin
@@ -13,10 +14,38 @@ spec:
     middleware:
       - name: extract-role-assignments
         kind: unwind
-        eventhub1:        
-          - selector: $.records[*]
+        eventhub1:
+          - selector: $.records[?(@.resultType == 'Start' && @.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE')]
             label: RoleAssignment
             key: $.correlationId
+            properties:
+              RoleLocation: $.RoleLocation
+              time: $.time
+              resourceId: $.resourceId
+              operationName: $.operationName
+              category: $.category
+              resultType: $.resultType
+              resultSignature: $.resultSignature
+              durationMs: $.durationMs
+              callerIpAddress: $.callerIpAddress
+              correlationId: $.correlationId
+              identity: $.identity
+              level: $.level
+              properties: $.properties
+              tenantId: $.tenantId
+              entity: $.properties.entity
   query: |
     MATCH (r:RoleAssignment)
-    RETURN  r.correlationId AS correlationId
+    RETURN r.correlationId AS correlationId,
+           r.time AS timestamp,
+           r.resourceId AS resourceId,
+           r.operationName AS operationName,
+           r.resultType AS resultType,
+           r.RoleLocation AS roleLocation,
+           r.callerIpAddress AS callerIpAddress,
+           r.tenantId AS tenantId,
+           r.identity AS identity,
+           r.properties AS properties,
+           r.resultSignature AS resultSignature,
+           r.category AS category,
+           r.entity AS entity
