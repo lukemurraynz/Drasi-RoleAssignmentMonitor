@@ -1,1 +1,0 @@
-# Managed by Azure Functions Core Tools

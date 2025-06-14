@@ -17,7 +17,7 @@ AzureFunction/.vscode/settings.json
 .env.production
 
 # IDE specific files
-.vscode/
+
 .idea/
 *.swp
 *.swo
