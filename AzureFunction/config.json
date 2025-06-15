@@ -23,7 +23,10 @@
       "parameters": {
         "bastionNamePrefix": "bastion-auto",
         "subnetAddressPrefix": "10.0.1.0/26",
-        "publicIpNamePrefix": "pip-bastion-auto"
+        "publicIpNamePrefix": "pip-bastion-auto",
+        "subscriptionId": "<your-subscription-id>",
+        "resourceGroupName": "<your-resource-group>",
+        "bastionName": "<your-bastion-name>"
       }
     },
     "CleanupBastion": {
@@ -37,6 +40,8 @@
   "global": {
     "enableLogging": true,
     "dryRun": false,
+    "defaultSubscriptionId": "6bca53bc-98d9-4cd3-92e7-0364c7bffac4",
+    "defaultResourceGroupName": "rg-6bca53bc",
     "defaultResourceGroupPattern": "rg-{subscriptionId}",
     "tags": {
       "CreatedBy": "Drasi-AutoBastion",

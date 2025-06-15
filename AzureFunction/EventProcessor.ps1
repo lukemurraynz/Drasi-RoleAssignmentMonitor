@@ -22,9 +22,14 @@ class EventParser {
             }
             
             # Extract operation type (i = insert/create, d = delete, u = update)
-            $operationType = $eventGridEvent.data.payload.op
+            $operationType = $null
+            if ($eventGridEvent.data.op) {
+                $operationType = $eventGridEvent.data.op
+            } elseif ($eventGridEvent.data.payload -and $eventGridEvent.data.payload.op) {
+                $operationType = $eventGridEvent.data.payload.op
+            }
             if (-not $operationType) {
-                Write-Warning "No operation type found in event payload"
+                Write-Warning "No operation type found in event payload or data root"
                 return $result
             }
             

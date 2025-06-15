@@ -3,7 +3,27 @@ param($eventGridEvent, $TriggerMetadata)
 # Modular Azure Function for RBAC-driven automation
 # Inspired by Bellhop: https://azure.github.io/bellhop/#/README
 
+# Handle Drasi.ControlSignal events
+if ($eventGridEvent.type -eq 'Drasi.ControlSignal') {
+    $payload = $eventGridEvent.data.payload
+    $kind = $payload.kind
+    $source = $payload.source
+    if ($null -ne $source -and ($source -is [hashtable] -or $source -is [psobject])) {
+        $sourceStr = $source | ConvertTo-Json -Compress
+    } else {
+        $sourceStr = $source
+    }
+    Write-Host "[DRASI CONTROL SIGNAL] kind: $kind, source: $sourceStr"
+    return
+}
+
 Write-Host "=== Starting Drasi RBAC Action Handler ==="
+$modulesPath = Join-Path $PSScriptRoot '..' 'Modules'
+
+Import-Module (Join-Path $modulesPath 'Az.Accounts' '5.1.0' 'Az.Accounts.psd1') -Force
+Import-Module (Join-Path $modulesPath 'Az.Resources' '8.0.0' 'Az.Resources.psd1') -Force
+Import-Module (Join-Path $modulesPath 'Az.Network' '7.17.0' 'Az.Network.psd1') -Force
+Import-Module (Join-Path $modulesPath 'Az.Compute' '10.0.1' 'Az.Compute.psd1') -Force
 
 try {
     # Load required modules - look in parent directory
@@ -52,7 +72,7 @@ try {
     if (-not $parsedEvent.isValid) {
         Write-Warning "Event validation failed. This may not be a role assignment event."
         Write-Host "=== Parsed Event Details ==="
-        $parsedEvent | ConvertTo-Json -Depth 3 | Write-Host
+        $parsedEvent | ConvertTo-Json -Depth 10 | Write-Host
         return
     }
     

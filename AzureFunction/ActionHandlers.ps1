@@ -1,5 +1,4 @@
 # Modular action handlers for Azure resource automation
-# Inspired by Bellhop pattern: https://azure.github.io/bellhop/#/README
 
 class ActionResult {
     [bool]$Success
@@ -97,21 +96,32 @@ class CreateBastionAction : BaseAction {
     }
     
     [hashtable] ParseScope([string]$scope) {
-        # Parse Azure resource scope
-        # Example: /subscriptions/11b74992-d520-46e1-a9e9-b55c57d2e890/providers/Microsoft.Authorization/roleAssignments/d6f61a53-f73c-4631-a59a-02d594ca5c9d
-        if ($scope -match '/subscriptions/([^/]+)') {
+        # Prefer explicit config values if set, otherwise parse from scope
+        $subscriptionId = $null
+        $resourceGroupName = $null
+
+        if ($this.Config.parameters.subscriptionId -and $this.Config.parameters.subscriptionId -ne '<your-subscription-id>') {
+            $subscriptionId = $this.Config.parameters.subscriptionId
+        } elseif ($this.GlobalConfig.defaultSubscriptionId) {
+            $subscriptionId = $this.GlobalConfig.defaultSubscriptionId
+        } elseif ($scope -match '/subscriptions/([^/]+)') {
             $subscriptionId = $Matches[1]
-            
-            # For simplicity, derive resource group name from subscription
-            # In real scenarios, you might want to extract this from additional context
+        }
+
+        if ($this.Config.parameters.resourceGroupName -and $this.Config.parameters.resourceGroupName -ne '<your-resource-group>') {
+            $resourceGroupName = $this.Config.parameters.resourceGroupName
+        } elseif ($this.GlobalConfig.defaultResourceGroupName) {
+            $resourceGroupName = $this.GlobalConfig.defaultResourceGroupName
+        } elseif ($subscriptionId -and $this.GlobalConfig.defaultResourceGroupPattern) {
             $resourceGroupName = $this.GlobalConfig.defaultResourceGroupPattern -replace '\{subscriptionId\}', $subscriptionId
-            
+        }
+
+        if ($subscriptionId -and $resourceGroupName) {
             return @{
                 SubscriptionId = $subscriptionId
                 ResourceGroupName = $resourceGroupName
             }
         }
-        
         return $null
     }
     
@@ -135,36 +145,51 @@ class CreateBastionAction : BaseAction {
     
     [object] CreateBastion([hashtable]$resourceInfo) {
         $this.LogInfo("Creating Bastion in subscription: $($resourceInfo.SubscriptionId)")
-        
         # Set context to correct subscription
         Set-AzContext -SubscriptionId $resourceInfo.SubscriptionId
-        
-        $bastionName = "$($this.Config.parameters.bastionNamePrefix)-$(Get-Random -Maximum 9999)"
+
+        # Ensure Resource Group exists
+        $rg = Get-AzResourceGroup -Name $resourceInfo.ResourceGroupName -ErrorAction SilentlyContinue
+        if (-not $rg) {
+            $this.LogInfo("Resource group '$($resourceInfo.ResourceGroupName)' does not exist. Creating it.")
+            $location = "New Zealand North"  # Default location; optionally make this configurable
+            $rg = New-AzResourceGroup -Name $resourceInfo.ResourceGroupName -Location $location -Tag $this.GlobalConfig.tags
+        } else {
+            $this.LogInfo("Resource group '$($resourceInfo.ResourceGroupName)' already exists.")
+            $location = $rg.Location
+        }
+
+        # Use bastionName from config if set, else generate
+        if ($this.Config.parameters.bastionName -and $this.Config.parameters.bastionName -ne '<your-bastion-name>') {
+            $bastionName = $this.Config.parameters.bastionName
+        } else {
+            $bastionName = "$($this.Config.parameters.bastionNamePrefix)-$(Get-Random -Maximum 9999)"
+        }
         $publicIpName = "$($this.Config.parameters.publicIpNamePrefix)-$(Get-Random -Maximum 9999)"
         
         # Create or get virtual network
-        $vnet = $this.EnsureVirtualNetwork($resourceInfo.ResourceGroupName)
+        $vnet = $this.EnsureVirtualNetwork($resourceInfo.ResourceGroupName, $location)
         
         # Create or get Bastion subnet
         $bastionSubnet = $this.EnsureBastionSubnet($vnet)
         
         # Create public IP
-        $publicIp = $this.CreatePublicIp($publicIpName, $resourceInfo.ResourceGroupName)
+        $publicIp = $this.CreatePublicIp($publicIpName, $resourceInfo.ResourceGroupName, $location)
         
         # Create Bastion
         $this.LogInfo("Creating Bastion host: $bastionName")
-        
+
         $bastion = New-AzBastion -ResourceGroupName $resourceInfo.ResourceGroupName `
                                  -Name $bastionName `
                                  -PublicIpAddress $publicIp `
-                                 -VirtualNetwork $vnet `
+                                 -Subnet $bastionSubnet `
                                  -Tag $this.GlobalConfig.tags
         
         $this.LogInfo("Bastion created successfully: $($bastion.Name)")
         return $bastion
     }
     
-    [object] EnsureVirtualNetwork([string]$resourceGroupName) {
+    [object] EnsureVirtualNetwork([string]$resourceGroupName, [string]$location) {
         # Try to find existing VNet, or create a simple one
         $vnets = Get-AzVirtualNetwork -ResourceGroupName $resourceGroupName -ErrorAction SilentlyContinue
         
@@ -178,7 +203,7 @@ class CreateBastionAction : BaseAction {
         $vnetName = "vnet-bastion-auto-$(Get-Random -Maximum 9999)"
         
         $vnet = New-AzVirtualNetwork -ResourceGroupName $resourceGroupName `
-                                     -Location "East US" `
+                                     -Location $location `
                                      -Name $vnetName `
                                      -AddressPrefix "10.0.0.0/16" `
                                      -Tag $this.GlobalConfig.tags
@@ -208,11 +233,11 @@ class CreateBastionAction : BaseAction {
         return $updatedVnet.Subnets | Where-Object { $_.Name -eq "AzureBastionSubnet" }
     }
     
-    [object] CreatePublicIp([string]$publicIpName, [string]$resourceGroupName) {
+    [object] CreatePublicIp([string]$publicIpName, [string]$resourceGroupName, [string]$location) {
         $this.LogInfo("Creating public IP: $publicIpName")
         
         return New-AzPublicIpAddress -ResourceGroupName $resourceGroupName `
-                                     -Location "East US" `
+                                     -Location $location `
                                      -Name $publicIpName `
                                      -AllocationMethod Static `
                                      -Sku Standard `
@@ -308,11 +333,23 @@ class CleanupBastionAction : BaseAction {
         
         $bastionToRemove = $bastions | Where-Object { $_.Name -like "*auto*" } | Select-Object -First 1
         
+        $publicIpRemoved = $false
+        $publicIpName = $null
         if ($bastionToRemove) {
             $this.LogInfo("Removing Bastion: $($bastionToRemove.Name)")
+            # Get the public IP resource ID from the Bastion's IP configuration
+            $publicIpId = $bastionToRemove.IpConfigurations[0].PublicIpAddress.Id
+            if ($publicIpId) {
+                $publicIpName = ($publicIpId -split "/")[-1]
+            }
             Remove-AzBastion -ResourceGroupName $resourceInfo.ResourceGroupName -Name $bastionToRemove.Name -Force
-            
-            return @{ Removed = $true; BastionName = $bastionToRemove.Name }
+            # Remove the associated Public IP if found
+            if ($publicIpName) {
+                $this.LogInfo("Removing Public IP: $publicIpName")
+                Remove-AzPublicIpAddress -ResourceGroupName $resourceInfo.ResourceGroupName -Name $publicIpName -Force -ErrorAction SilentlyContinue
+                $publicIpRemoved = $true
+            }
+            return @{ Removed = $true; BastionName = $bastionToRemove.Name; PublicIpRemoved = $publicIpRemoved; PublicIpName = $publicIpName }
         }
         
         return @{ Removed = $false; BastionName = $null }
