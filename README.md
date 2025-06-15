@@ -160,43 +160,64 @@ drasi describe query azure-role-change-vmadminlogin
 drasi describe reaction my-reactionvmlogin
 ```
 
-### 6. Deploy the Azure Function (Optional)
+### 6. Configure and Deploy the Azure Function
 
-If you want automatic Bastion management:
+The Azure Function provides modular, configuration-driven automation for RBAC events:
 
-```bash
-# Navigate to the deployment directory
-cd Deployment
-
-# Run the deployment script
-./deploy.sh
-
-# Follow prompts to configure the Function App
-# This will create:
-# - Azure Function App with PowerShell runtime
-# - Application Insights for monitoring
-# - Required role assignments
-# - Event Grid webhook configuration
+#### Configuration
+1. **Update `AzureFunction/config.json`** with your role-to-action mappings:
+```json
+{
+  "roleActions": {
+    "/providers/Microsoft.Authorization/roleDefinitions/1c0163c0-47e6-4577-8991-ea5c82e286e4": {
+      "name": "Virtual Machine Administrator Login",
+      "actions": {
+        "create": ["CreateBastion"],
+        "delete": ["CleanupBastion"]
+      }
+    }
+  }
+}
 ```
+
+2. **Test with dry run mode** by setting `"dryRun": true` in the global configuration
+
+3. **Deploy the Function App** with PowerShell 7 runtime and configure Event Grid subscription
+
+See `AzureFunction/README.md` for detailed configuration and deployment instructions.
 
 ## Understanding the Components
 
 ### Azure Function for Bastion Management (`AzureFunction/`)
 
-**NEW**: This PowerShell-based Azure Function provides automated Bastion management:
+**UPDATED**: This modular PowerShell-based Azure Function provides configuration-driven automation:
 
+- **Modular Design**: Inspired by [Bellhop](https://github.com/Azure/bellhop) pattern for extensible automation
+- **Configuration-Driven**: Simple JSON configuration maps RBAC roles to actions
 - **Event-Driven**: Triggered by Event Grid events from the Drasi reaction
+- **Beginner-Friendly**: Designed for first-time Azure and PowerShell users
 - **Intelligent Logic**: Creates Bastion only when needed, removes when safe
-- **Extensible Design**: Framework supports additional resources and roles
+- **Extensible Framework**: Easily add new roles and actions without code changes
 - **Security-First**: Uses managed identity and follows least-privilege principles
-- **Well-Architected**: Implements reliability, security, and cost optimization patterns
 
 Key features:
-- Automatic Azure Bastion creation for VMs with administrator access
-- Smart cleanup that preserves Bastion when other VMs need access  
-- Modular architecture inspired by [Bellhop](https://github.com/Azure/bellhop)
-- Comprehensive logging and monitoring via Application Insights
-- Configuration-driven behavior for easy customization
+- **Simple Configuration**: JSON-based role-to-action mapping
+- **Built-in Actions**: Azure Bastion creation/cleanup for VM admin roles
+- **Dry Run Mode**: Test safely without making actual Azure changes
+- **Comprehensive Logging**: Detailed logging for debugging and monitoring
+- **Error Handling**: Robust error handling with graceful fallbacks
+- **Sample Events**: Included test data for validation
+
+#### Quick Start
+1. Configure role mappings in `config.json`
+2. Enable dry run mode for testing
+3. Deploy Function App and configure Event Grid
+4. Monitor logs for automation results
+
+#### Adding New Roles/Actions
+- **New Role**: Add role definition ID and actions to `config.json`
+- **New Action**: Create action class in `ActionHandlers.ps1`
+- **Test**: Use dry run mode and sample events for validation
 
 See `AzureFunction/README.md` for detailed documentation.
 
