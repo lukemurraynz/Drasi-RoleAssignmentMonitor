@@ -181,9 +181,12 @@ class CreateBastionAction : BaseAction {
 
         $bastion = New-AzBastion -ResourceGroupName $resourceInfo.ResourceGroupName `
                                  -Name $bastionName `
-                                 -PublicIpAddress $publicIp `
-                                 -Subnet $bastionSubnet `
-                                 -Tag $this.GlobalConfig.tags
+                                 -PublicIpAddressRgName $resourceInfo.ResourceGroupName `
+                                 -PublicIpAddressName $publicIp.Name `
+                                 -VirtualNetworkRgName $resourceInfo.ResourceGroupName `
+                                 -VirtualNetworkName $vnet.Name `
+                                 -Sku "Standard" `
+                                 -ScaleUnit 2
         
         $this.LogInfo("Bastion created successfully: $($bastion.Name)")
         return $bastion
