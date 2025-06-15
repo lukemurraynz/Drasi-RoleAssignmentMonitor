@@ -46,7 +46,9 @@
         "DrasiProject.drasi",
         "GitHub.copilot",
         "GitHub.copilot-chat",
-        "Summer.azure-event-hub-explorer"
+        "Summer.azure-event-hub-explorer",
+        "ms-azuretools.vscode-azurefunctions",
+        "ms-vscode.PowerShell"
       ]
     }
   }

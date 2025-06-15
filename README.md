@@ -17,12 +17,26 @@ This implementation monitors Azure Activity Logs for role assignment operations 
 1. **Captures** Azure role assignment events from an Event Hub
 2. **Processes** the events using a continuous query to extract relevant information
 3. **Triggers** notifications to Azure Event Grid when role assignments are created, updated, or deleted
+4. **Manages** Azure Bastion resources automatically via PowerShell Azure Function
+
+### New: Azure Function for Bastion Management
+
+The repository now includes a PowerShell-based Azure Function (`AzureFunction/`) that:
+
+- **Receives** Event Grid events from the Drasi reaction
+- **Creates** Azure Bastion hosts when VM Administrator Login roles are assigned
+- **Removes** Bastion hosts when roles are revoked (if no other VMs need access)
+- **Provides** an extensible framework for managing other Azure resources based on role assignments
+
+This follows an event-driven automation pattern inspired by [Bellhop](https://github.com/Azure/bellhop), but uses Drasi reactions instead of tag-based scheduling.
 
 ### Architecture Overview
 
 ```
-Azure Activity Logs → Event Hub → Drasi Source → Continuous Query → Reaction → Event Grid
+Azure Activity Logs → Event Hub → Drasi Source → Continuous Query → Reaction → Event Grid → Azure Function → Bastion Management
 ```
+
+This repository now includes an **Azure Function** that extends the event processing pipeline to automatically manage Azure Bastion resources based on VM Administrator Login role assignments.
 
 ## Prerequisites
 
@@ -34,6 +48,7 @@ Before getting started, ensure you have:
 - **Azure Event Hub** configured to receive Activity Logs
 - **Azure Event Grid** topic for receiving notifications
 - **Managed Identity** with appropriate permissions
+- **Azure Function App** (for Bastion management) with PowerShell runtime
 
 ## Quick Start
 
@@ -145,12 +160,48 @@ drasi describe query azure-role-change-vmadminlogin
 drasi describe reaction my-reactionvmlogin
 ```
 
+### 6. Deploy the Azure Function (Optional)
+
+If you want automatic Bastion management:
+
+```bash
+# Navigate to the deployment directory
+cd Deployment
+
+# Run the deployment script
+./deploy.sh
+
+# Follow prompts to configure the Function App
+# This will create:
+# - Azure Function App with PowerShell runtime
+# - Application Insights for monitoring
+# - Required role assignments
+# - Event Grid webhook configuration
+```
+
 ## Understanding the Components
 
-### Event Hub Source (`Sources/eventhubsource.yaml`)
+### Azure Function for Bastion Management (`AzureFunction/`)
 
+**NEW**: This PowerShell-based Azure Function provides automated Bastion management:
+
+- **Event-Driven**: Triggered by Event Grid events from the Drasi reaction
+- **Intelligent Logic**: Creates Bastion only when needed, removes when safe
+- **Extensible Design**: Framework supports additional resources and roles
+- **Security-First**: Uses managed identity and follows least-privilege principles
+- **Well-Architected**: Implements reliability, security, and cost optimization patterns
+
+Key features:
+- Automatic Azure Bastion creation for VMs with administrator access
+- Smart cleanup that preserves Bastion when other VMs need access  
+- Modular architecture inspired by [Bellhop](https://github.com/Azure/bellhop)
+- Comprehensive logging and monitoring via Application Insights
+- Configuration-driven behavior for easy customization
+
+See `AzureFunction/README.md` for detailed documentation.
+
+### Event Hub Source (`Sources/eventhubsource.yaml`)
 This source connects to an Azure Event Hub that receives Azure Activity Logs. It:
-- Uses managed identity for secure authentication
 - Monitors specific Event Hub for role assignment events
 - Provides a `bootstrapWindow` to catch recent events on startup
 

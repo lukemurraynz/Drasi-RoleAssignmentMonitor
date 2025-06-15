@@ -1,0 +1,38 @@
+# Azure Functions
+AzureFunction/local.settings.json
+AzureFunction/bin/
+AzureFunction/obj/
+AzureFunction/.vs/
+AzureFunction/.vscode/settings.json
+
+# Build and deployment artifacts
+*.zip
+*.log
+*.tmp
+
+# Environment specific files
+.env
+.env.local
+.env.development
+.env.production
+
+# IDE specific files
+
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Node modules (if any)
+node_modules/
+
+# PowerShell specific
+*.ps1xml
+
+# Temporary deployment files
+deployment-output.json
+arm-template-parameters.json.temp
