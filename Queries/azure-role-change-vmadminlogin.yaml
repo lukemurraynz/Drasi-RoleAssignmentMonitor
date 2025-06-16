@@ -15,37 +15,43 @@ spec:
       - name: extract-role-assignments
         kind: unwind
         eventhub1:
-          - selector: $.records[?(@.resultType == 'Start' && @.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE')]
+          - selector: $.records[?(@.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/DELETE' || @.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE')]
             label: RoleAssignment
             key: $.correlationId
             properties:
-              RoleLocation: $.RoleLocation
               time: $.time
               resourceId: $.resourceId
               operationName: $.operationName
+              operationType: $.resultType
               category: $.category
-              resultType: $.resultType
-              resultSignature: $.resultSignature
-              durationMs: $.durationMs
-              callerIpAddress: $.callerIpAddress
-              correlationId: $.correlationId
-              identity: $.identity
               level: $.level
-              properties: $.properties
+              callerIpAddress: $.identity.claims.ipaddr
+              correlationId: $.correlationId
+              caller: $.identity.claims.name
               tenantId: $.tenantId
+              subscriptionId: $.identity.authorization.scope
+              status: $.resultSignature
+              subStatus: $.resultType
+              properties: $.properties
               entity: $.properties.entity
+              resourceType: "Microsoft.Authorization/roleAssignments"
+              resourceProviderName: "Microsoft.Authorization"
   query: |
     MATCH (r:RoleAssignment)
     RETURN r.correlationId AS correlationId,
            r.time AS timestamp,
            r.resourceId AS resourceId,
            r.operationName AS operationName,
-           r.resultType AS resultType,
-           r.RoleLocation AS roleLocation,
-           r.callerIpAddress AS callerIpAddress,
-           r.tenantId AS tenantId,
-           r.identity AS identity,
-           r.properties AS properties,
-           r.resultSignature AS resultSignature,
+           r.operationType AS operationType,
            r.category AS category,
-           r.entity AS entity
+           r.level AS level,
+           r.callerIpAddress AS callerIpAddress,
+           r.caller AS caller,
+           r.tenantId AS tenantId,
+           r.subscriptionId AS subscriptionId,
+           r.status AS status,
+           r.subStatus AS subStatus,
+           r.properties AS properties,
+           r.entity AS entity,
+           r.resourceType AS resourceType,
+           r.resourceProviderName AS resourceProviderName
