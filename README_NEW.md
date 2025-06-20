@@ -1,6 +1,8 @@
 # Azure Role Assignment Monitor with Drasi
 
-> **✨ Readme✨**
+> **✨ Complete Beginner-Friendly Guide ✨**
+> 
+> This guide is designed for developers who may be new to Azure Functions, PowerShell, or Drasi. We'll explain everything step by step!
 
 ## What Does This Project Do?
 
@@ -24,7 +26,7 @@ When Sarah from Marketing needs access to a VM:
 ## Key Technologies Explained
 
 ### 🔧 **Azure Functions**
-Think of [Azure Functions](https://learn.microsoft.com/azure/azure-functions/functions-overview?WT.mc_id=AZ-MVP-5004796) like "mini-programs" that run in the cloud. They only execute when triggered by an event (like receiving a notification). You don't need to manage servers - Azure handles all the infrastructure.
+Think of Azure Functions like "mini-programs" that run in the cloud. They only execute when triggered by an event (like receiving a notification). You don't need to manage servers - Azure handles all the infrastructure.
 
 ### 📊 **Drasi**
 [Drasi](https://drasi.io/) is a platform that watches for changes in your data and reacts instantly. It's like having a super-smart assistant that monitors everything and takes action when specific things happen.
@@ -35,7 +37,7 @@ Think of [Azure Functions](https://learn.microsoft.com/azure/azure-functions/fun
 - **Reactions**: What to do when changes happen (notify our Azure Function)
 
 ### 🛡️ **Azure Bastion**
-A secure way to connect to VMs without exposing them to the internet. Think [Azure Bastion](https://learn.microsoft.com/azure/bastion/bastion-overview?WT.mc_id=AZ-MVP-5004796) it as a secure "bridge" that lets users safely access VMs through their web browser.
+A secure way to connect to VMs without exposing them to the internet. Think of it as a secure "bridge" that lets users safely access VMs through their web browser.
 
 ### 💻 **PowerShell**
 A scripting language that's excellent for automating Azure tasks. Don't worry if you're new to it - our code is well-commented and modular!
@@ -173,18 +175,6 @@ az role assignment create \
 ```
 
 Watch the logs in your Azure Function to see the automation in action!
-
-## Visual Quick Start Overview
-
-```
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│   Step 1    │    │   Step 2    │    │   Step 3    │    │   Step 4    │
-│             │    │             │    │             │    │             │
-│ Install     │───▶│ Configure   │───▶│ Deploy      │───▶│ Test        │
-│ Drasi CLI   │    │ Azure       │    │ Components  │    │ System      │
-│             │    │ Function    │    │             │    │             │
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
-```
 
 ## Understanding the Azure Function Code
 
@@ -457,12 +447,3 @@ Help improve this README by:
 **Happy Automating! 🚀**
 
 *This project demonstrates the power of event-driven automation using Drasi and Azure Functions. Start small, learn as you go, and gradually add more sophisticated automation to your environment.*
-
-## Getting Started Fast 🚀
-
-New to this project? We've made it super easy:
-
-1. **📋 Run the setup checker:** `./setup.sh` - Verifies you have everything installed
-2. **📝 Use the config template:** Copy `AzureFunction/config.template.json` to `AzureFunction/config.json`
-3. **🆘 Having issues?** Check `TROUBLESHOOTING.md` for common problems and solutions
-4. **📚 Follow the detailed guide below** for step-by-step instructions
