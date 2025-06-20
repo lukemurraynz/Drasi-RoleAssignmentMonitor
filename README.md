@@ -340,7 +340,7 @@ Use the sample event in `AzureFunction/sample-events.json` to test your function
 ### 🔐 **Authentication**
 - Always use Managed Identity (never store credentials in code)
 - Regularly rotate Event Grid access keys
-- Use least-privilege principle for role assignments
+- Use the least-privilege principle for role assignments
 
 ### 🏷️ **Resource Tagging**
 All created resources are automatically tagged for tracking:
@@ -387,7 +387,7 @@ All created resources are automatically tagged for tracking:
 ## Monitoring and Observability
 
 ### 📈 **Azure Function Metrics**
-Monitor these key metrics in Azure Portal:
+Monitor these key metrics in the Azure Portal:
 - Function execution count
 - Success/failure rates
 - Duration and performance
@@ -444,12 +444,12 @@ Help improve this README by:
 
 ### 📚 **Learning More**
 - [Drasi Documentation](https://drasi.io/)
-- [Azure Functions PowerShell Guide](https://docs.microsoft.com/azure/azure-functions/functions-reference-powershell)
+- [Azure Functions PowerShell Guide](https://learn.microsoft.com/azure/azure-functions/functions-reference-powershell?tabs=portal&WT.mc_id=AZ-MVP-5004796)
 - [Azure Bastion Documentation](https://docs.microsoft.com/azure/bastion/)
 - [PowerShell for Azure](https://docs.microsoft.com/powershell/azure/)
 
 ### 🤝 **Community**
-- [Drasi GitHub Discussions](https://github.com/orgs/drasi-project/discussions)
+- [Drasi GitHub](https://github.com/orgs/drasi-project/discussions](https://github.com/drasi-project)
 - [Azure PowerShell Community](https://github.com/Azure/azure-powershell)
 
 ---
