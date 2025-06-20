@@ -217,7 +217,7 @@ class ActionOrchestrator {
     # Debug: Log both operationType and azureOperationName
     Write-Host "[DEBUG] DetermineActions: operationType=$($parsedEvent.operationType), azureOperationName=$($parsedEvent.azureOperationName)"
 
-    if ($parsedEvent.roleDefinitionId -eq $vmAdminLoginRoleId) {
+    if ($parsedEvent.roleDefinitionId -like $vmAdminLoginRoleId) {
         $azureOperationName = $this.GetAzureOperationFromEvent($parsedEvent)
         if ($azureOperationName -like "*DELETE*") {
             $actions += "CleanupBastion"
