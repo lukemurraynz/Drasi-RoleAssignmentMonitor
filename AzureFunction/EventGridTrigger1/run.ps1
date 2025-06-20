@@ -67,7 +67,7 @@ try {
     
     # Parse the Drasi event
     Write-Host "[INFO] Parsing Drasi event..."
-    $parsedEvent = [EventParser]::ParseDrasiEvent($eventGridEvent)
+    $parsedEvent = Parse-DrasiEvent $eventGridEvent
     
     if (-not $parsedEvent.isValid) {
         Write-Warning "Event validation failed. This may not be a role assignment event."

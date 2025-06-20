@@ -50,15 +50,6 @@ class CreateBastionAction : BaseAction {
     [ActionResult] Execute([hashtable]$context) {
         $this.LogInfo("Starting CreateBastion action for scope: $($context.scope)")
         
-        if ($this.GlobalConfig.dryRun) {
-            $this.LogInfo("DRY RUN: Would create Bastion for scope: $($context.scope)")
-            return [ActionResult]::new($true, "Dry run completed successfully", @{
-                action = "CreateBastion"
-                scope = $context.scope
-                dryRun = $true
-            })
-        }
-        
         try {
             # Extract resource information from scope
             $resourceInfo = $this.ParseScope($context.scope)
@@ -253,15 +244,6 @@ class CleanupBastionAction : BaseAction {
     
     [ActionResult] Execute([hashtable]$context) {
         $this.LogInfo("Starting CleanupBastion action for scope: $($context.scope)")
-        
-        if ($this.GlobalConfig.dryRun) {
-            $this.LogInfo("DRY RUN: Would cleanup Bastion for scope: $($context.scope)")
-            return [ActionResult]::new($true, "Dry run completed successfully", @{
-                action = "CleanupBastion"
-                scope = $context.scope
-                dryRun = $true
-            })
-        }
         
         try {
             # Extract resource information from scope

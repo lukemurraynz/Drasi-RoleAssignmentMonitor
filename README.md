@@ -180,8 +180,6 @@ The Azure Function provides modular, configuration-driven automation for RBAC ev
 }
 ```
 
-2. **Test with dry run mode** by setting `"dryRun": true` in the global configuration
-
 3. **Deploy the Function App** with PowerShell 7 runtime and configure Event Grid subscription
 
 See `AzureFunction/README.md` for detailed configuration and deployment instructions.

@@ -1,7 +1,6 @@
 {
   "global": {
     "enableLogging": true,
-    "dryRun": false,
     "defaultSubscriptionId": "6bca53bc-98d9-4cd3-92e7-0364c7bffac4",
     "defaultResourceGroupName": "rg-6bca53bc",
     "defaultResourceGroupPattern": "rg-{subscriptionId}",

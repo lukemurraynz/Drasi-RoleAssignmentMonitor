@@ -15,7 +15,7 @@ spec:
       - name: extract-role-assignments
         kind: unwind
         eventhub1:
-          - selector: $.records[?(@.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/DELETE' || @.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE')]
+          - selector: $.records[?((@.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE' || @.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/DELETE') && (@.resultType == 'Success' || @.resultType == 'Start') && @.resultType != null)]
             label: RoleAssignment
             key: $.correlationId
             properties:
@@ -25,7 +25,6 @@ spec:
               operationType: $.resultType
               category: $.category
               level: $.level
-              callerIpAddress: $.identity.claims.ipaddr
               correlationId: $.correlationId
               caller: $.identity.claims.name
               tenantId: $.tenantId
@@ -36,6 +35,7 @@ spec:
               entity: $.properties.entity
               resourceType: "Microsoft.Authorization/roleAssignments"
               resourceProviderName: "Microsoft.Authorization"
+              roleDefinitionId: "$.properties.requestbody.Properties.RoleDefinitionId || $.properties.responseBody.properties.roleDefinitionId"
   query: |
     MATCH (r:RoleAssignment)
     RETURN r.correlationId AS correlationId,

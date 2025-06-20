@@ -52,17 +52,22 @@ class ConfigurationManager {
         return $this.Config.actions.$actionName
     }
     
-    [string] GetRoleName([string]$roleDefinitionId) {
-        if ($this.Config.roleMappings -and $this.Config.roleMappings.$roleDefinitionId) {
-            return $this.Config.roleMappings.$roleDefinitionId
+[string] GetRoleName([string]$roleDefinitionId) {
+    if ($this.Config.roleMappings) {
+        foreach ($key in $this.Config.roleMappings.Keys) {
+            # Match if the roleDefinitionId ends with the mapping key (handles any prefix)
+            if ($roleDefinitionId -like "*$key") {
+                return $this.Config.roleMappings.$key
+            }
         }
-        return "Unknown Role ($roleDefinitionId)"
     }
+    return "Unknown Role ($roleDefinitionId)"
+}
 }
 
-# Event parsing class for Drasi events
-
-static [hashtable] ParseDrasiEvent([hashtable]$eventGridEvent) {
+# Event parsing function for Drasi events
+function Parse-DrasiEvent {
+    param([hashtable]$eventGridEvent)
     $result = @{
         isValid = $false
         operationType = $null
@@ -117,21 +122,28 @@ static [hashtable] ParseDrasiEvent([hashtable]$eventGridEvent) {
             if ($resourceId -match '/subscriptions/([^/]+)') {
                 $result.scope = "/subscriptions/$($Matches[1])"
             }
-            
+
             # Try to extract role definition from response body if available
-            if ($payload.properties.responseBody) {
-                try {
-                    $responseBody = $payload.properties.responseBody | ConvertFrom-Json
-                    $result.roleDefinitionId = $responseBody.properties.roleDefinitionId
-                    $result.principalId = $responseBody.properties.principalId
-                } catch {
-                    # Fallback to VM Admin Login role assumption
-                    $result.roleDefinitionId = "/providers/Microsoft.Authorization/roleDefinitions/1c0163c0-47e6-4577-8991-ea5c82e286e4"
-                    $result.principalId = "unknown"
+            try {
+                # Ensure responseBody is parsed from string if needed
+                $responseBodyRaw = $payload.properties.responseBody
+                if ($responseBodyRaw -is [string]) {
+                    $responseBody = $responseBodyRaw | ConvertFrom-Json
+                } else {
+                    $responseBody = $responseBodyRaw
                 }
-            } else {
-                # Fallback values for DELETE operations without response body
+                $result.roleDefinitionId = $responseBody.properties.roleDefinitionId
+                $result.principalId = $responseBody.properties.principalId
+            } catch {
+                # Fallback to VM Admin Login role assumption
                 $result.roleDefinitionId = "/providers/Microsoft.Authorization/roleDefinitions/1c0163c0-47e6-4577-8991-ea5c82e286e4"
+                $result.principalId = "unknown"
+            }
+            # Fallback values for DELETE operations without response body (if above fails)
+            if (-not $result.roleDefinitionId) {
+                $result.roleDefinitionId = "/providers/Microsoft.Authorization/roleDefinitions/1c0163c0-47e6-4577-8991-ea5c82e286e4"
+            }
+            if (-not $result.principalId) {
                 $result.principalId = "unknown"
             }
         }
@@ -200,38 +212,17 @@ class ActionOrchestrator {
     $actions = @()
     $globalConfig = $this.ConfigManager.GetGlobalConfiguration()
     
-    # Check if this is a VM Admin Login role (1c0163c0-47e6-4577-8991-ea5c82e286e4)
     $vmAdminLoginRoleId = "/providers/Microsoft.Authorization/roleDefinitions/1c0163c0-47e6-4577-8991-ea5c82e286e4"
-    
+
+    # Debug: Log both operationType and azureOperationName
+    Write-Host "[DEBUG] DetermineActions: operationType=$($parsedEvent.operationType), azureOperationName=$($parsedEvent.azureOperationName)"
+
     if ($parsedEvent.roleDefinitionId -eq $vmAdminLoginRoleId) {
-        # The key fix: Look at the actual Azure operation, not just the Drasi operation
-        # Since all events come as 'i' (insert) in Drasi, we need to check what actually happened in Azure
-        
-        # Parse the operation type from the event data to determine actual Azure action
-        $isRoleCreation = $false
-        $isRoleDeletion = $false
-        
-        # Check if this represents a role assignment creation or deletion
-        # For role assignments, we need to look at the Azure operation name in the audit log
-        if ($parsedEvent.operationType -eq 'i') {
-            # This is a new audit log entry, but we need to check what Azure operation it represents
-            # The operation name is embedded in the event data
-            
-            # Access the original event data to get the actual Azure operation
-            $azureOperationName = $this.GetAzureOperationFromEvent($parsedEvent)
-            
-            if ($azureOperationName -like "*WRITE*" -or $azureOperationName -like "*PUT*") {
-                # Role assignment was created/granted
-                $isRoleCreation = $true
-                $actions += "CreateBastion"
-            } elseif ($azureOperationName -like "*DELETE*") {
-                # Role assignment was deleted/removed
-                $isRoleDeletion = $true
-                $actions += "CleanupBastion"
-            }
-        } elseif ($parsedEvent.operationType -eq 'd') {
-            # This would be a deletion of the audit log entry itself (rare)
-            # For now, we'll treat this as no action needed
+        $azureOperationName = $this.GetAzureOperationFromEvent($parsedEvent)
+        if ($azureOperationName -like "*DELETE*") {
+            $actions += "CleanupBastion"
+        } elseif ($azureOperationName -like "*WRITE*" -or $azureOperationName -like "*PUT*") {
+            $actions += "CreateBastion"
         }
     }
     
@@ -311,15 +302,6 @@ class CreateBastionAction : BaseAction {
     
     [ActionResult] Execute([hashtable]$context) {
         $this.LogInfo("Starting CreateBastion action for scope: $($context.scope)")
-        
-        if ($this.GlobalConfig.dryRun) {
-            $this.LogInfo("DRY RUN: Would create Bastion for scope: $($context.scope)")
-            return [ActionResult]::new($true, "Dry run completed successfully", @{
-                action = "CreateBastion"
-                scope = $context.scope
-                dryRun = $true
-            })
-        }
         
         try {
             # Extract resource information from scope
@@ -515,15 +497,6 @@ class CleanupBastionAction : BaseAction {
     
     [ActionResult] Execute([hashtable]$context) {
         $this.LogInfo("Starting CleanupBastion action for scope: $($context.scope)")
-        
-        if ($this.GlobalConfig.dryRun) {
-            $this.LogInfo("DRY RUN: Would cleanup Bastion for scope: $($context.scope)")
-            return [ActionResult]::new($true, "Dry run completed successfully", @{
-                action = "CleanupBastion"
-                scope = $context.scope
-                dryRun = $true
-            })
-        }
         
         try {
             # Extract resource information from scope

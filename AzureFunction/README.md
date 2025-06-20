@@ -67,7 +67,6 @@ Removes Bastion when VM admin roles are deleted (with safety checks).
 ```json
 "global": {
   "enableLogging": true,
-  "dryRun": false,
   "defaultResourceGroupPattern": "rg-{subscriptionId}",
   "tags": {
     "CreatedBy": "Drasi-AutoBastion",
@@ -139,16 +138,6 @@ class YourAction : BaseAction {
 ```
 
 ## Testing
-
-### Dry Run Mode
-
-Enable dry run to test without making actual changes:
-
-```json
-"global": {
-  "dryRun": true
-}
-```
 
 ### Sample Test Event
 
