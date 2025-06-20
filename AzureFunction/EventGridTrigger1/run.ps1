@@ -50,6 +50,30 @@ try {
     
     Write-Host "[INFO] Modules loaded successfully"
     
+    # Check authentication context
+    $currentContext = Get-AzContext -ErrorAction SilentlyContinue
+    if ($currentContext) {
+        Write-Host "[INFO] Azure authentication context found:"
+        Write-Host "  - Account: $($currentContext.Account.Id)"
+        Write-Host "  - Subscription: $($currentContext.Subscription.Name) ($($currentContext.Subscription.Id))"
+        Write-Host "  - Tenant: $($currentContext.Tenant.Id)"
+    } else {
+        Write-Warning "[WARNING] No Azure authentication context found"
+        # Try to re-authenticate using MSI
+        if ($env:MSI_SECRET) {
+            Write-Host "[INFO] Attempting to authenticate with MSI..."
+            try {
+                Disable-AzContextAutosave -Scope Process | Out-Null
+                $connectResult = Connect-AzAccount -Identity -ErrorAction Stop
+                Write-Host "[INFO] Successfully authenticated with MSI: $($connectResult.Context.Account.Id)"
+            } catch {
+                Write-Error "[ERROR] Failed to authenticate with MSI: $($_.Exception.Message)"
+            }
+        } else {
+            Write-Warning "[WARNING] No MSI_SECRET environment variable found"
+        }
+    }
+    
     # Initialize configuration manager
     $configManager = [ConfigurationManager]::new($configPath)
     $globalConfig = $configManager.GetGlobalConfiguration()

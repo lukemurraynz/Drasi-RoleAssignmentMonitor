@@ -15,9 +15,9 @@ spec:
       - name: extract-role-assignments
         kind: unwind
         eventhub1:
-          - selector: $.records[?((@.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE' || @.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/DELETE'))]
+          - selector: $.records[?(@.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE' || @.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/DELETE')]
             label: RoleAssignment
-            key: $.correlationId
+            key: $.time
             properties:
               time: $.time
               resourceId: $.resourceId
@@ -27,12 +27,15 @@ spec:
               level: $.level
               correlationId: $.correlationId
               caller: $.identity.claims.name
+              callerIpAddress: $.callerIpAddress
               tenantId: $.tenantId
               subscriptionId: $.identity.authorization.scope
               status: $.resultSignature
               subStatus: $.resultType
+              durationMs: $.durationMs
               properties: $.properties
               entity: $.properties.entity
+              requestBody: $.properties.requestbody
               resourceType: "Microsoft.Authorization/roleAssignments"
               resourceProviderName: "Microsoft.Authorization"
 
@@ -51,8 +54,9 @@ spec:
            r.subscriptionId AS subscriptionId,
            r.status AS status,
            r.subStatus AS subStatus,
+           r.durationMs AS durationMs,
            r.properties AS properties,
            r.entity AS entity,
            r.resourceType AS resourceType,
-           r.resourceProviderName AS resourceProviderName
-
+           r.resourceProviderName AS resourceProviderName,
+           r.requestBody AS requestBody

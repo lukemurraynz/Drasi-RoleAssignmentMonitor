@@ -87,33 +87,63 @@ class CreateBastionAction : BaseAction {
     }
     
     [hashtable] ParseScope([string]$scope) {
-        # Prefer explicit config values if set, otherwise parse from scope
+        # Always use config values - completely ignore parsed scope
         $subscriptionId = $null
         $resourceGroupName = $null
 
-        if ($this.Config.parameters.subscriptionId -and $this.Config.parameters.subscriptionId -ne '<your-subscription-id>') {
-            $subscriptionId = $this.Config.parameters.subscriptionId
-        } elseif ($this.GlobalConfig.defaultSubscriptionId) {
+        $this.LogInfo("ParseScope called for CreateBastion - ignoring scope parameter and using config values only")
+
+        # Debug the global config structure
+        $this.LogInfo("GlobalConfig keys: $($this.GlobalConfig.Keys -join ', ')")
+        $this.LogInfo("GlobalConfig.defaultSubscriptionId exists: $($this.GlobalConfig.ContainsKey('defaultSubscriptionId'))")
+        $this.LogInfo("GlobalConfig.defaultResourceGroupName exists: $($this.GlobalConfig.ContainsKey('defaultResourceGroupName'))")
+
+        # Always use global config values first (most reliable and consistent)
+        if ($this.GlobalConfig.ContainsKey('defaultSubscriptionId') -and $this.GlobalConfig.defaultSubscriptionId) {
             $subscriptionId = $this.GlobalConfig.defaultSubscriptionId
-        } elseif ($scope -match '/subscriptions/([^/]+)') {
-            $subscriptionId = $Matches[1]
+            $this.LogInfo("Using default subscription ID from global config: $subscriptionId")
+        } elseif ($this.Config.parameters.ContainsKey('subscriptionId') -and $this.Config.parameters.subscriptionId -and $this.Config.parameters.subscriptionId -ne '<your-subscription-id>') {
+            $subscriptionId = $this.Config.parameters.subscriptionId
+            $this.LogInfo("Using subscription ID from action config: $subscriptionId")
         }
 
-        if ($this.Config.parameters.resourceGroupName -and $this.Config.parameters.resourceGroupName -ne '<your-resource-group>') {
-            $resourceGroupName = $this.Config.parameters.resourceGroupName
-        } elseif ($this.GlobalConfig.defaultResourceGroupName) {
+        # Always use global config values first (most reliable and consistent)
+        if ($this.GlobalConfig.ContainsKey('defaultResourceGroupName') -and $this.GlobalConfig.defaultResourceGroupName) {
             $resourceGroupName = $this.GlobalConfig.defaultResourceGroupName
-        } elseif ($subscriptionId -and $this.GlobalConfig.defaultResourceGroupPattern) {
-            $resourceGroupName = $this.GlobalConfig.defaultResourceGroupPattern -replace '\{subscriptionId\}', $subscriptionId
+            $this.LogInfo("Using default resource group from global config: $resourceGroupName")
+        } elseif ($this.Config.parameters.ContainsKey('resourceGroupName') -and $this.Config.parameters.resourceGroupName -and $this.Config.parameters.resourceGroupName -ne '<your-resource-group>') {
+            $resourceGroupName = $this.Config.parameters.resourceGroupName
+            $this.LogInfo("Using resource group from action config: $resourceGroupName")
         }
 
-        if ($subscriptionId -and $resourceGroupName) {
-            return @{
-                SubscriptionId = $subscriptionId
-                ResourceGroupName = $resourceGroupName
-            }
+        # Validate that we have both required values
+        if (-not $subscriptionId) {
+            $this.LogError("No subscription ID found in configuration")
+            $this.LogError("Global config defaultSubscriptionId: '$($this.GlobalConfig.defaultSubscriptionId)'")
+            $this.LogError("Action config subscriptionId: '$($this.Config.parameters.subscriptionId)'")
+            $this.LogError("Full GlobalConfig: $($this.GlobalConfig | ConvertTo-Json -Depth 2)")
+            return $null
         }
-        return $null
+
+        if (-not $resourceGroupName) {
+            $this.LogError("No resource group name found in configuration")
+            $this.LogError("Global config defaultResourceGroupName: '$($this.GlobalConfig.defaultResourceGroupName)'")
+            $this.LogError("Action config resourceGroupName: '$($this.Config.parameters.resourceGroupName)'")
+            $this.LogError("Full GlobalConfig: $($this.GlobalConfig | ConvertTo-Json -Depth 2)")
+            return $null
+        }
+
+        # Validate subscription ID format
+        if (-not ($subscriptionId -match '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')) {
+            $this.LogError("Invalid subscription ID format in config: '$subscriptionId'")
+            return $null
+        }
+
+        $this.LogInfo("Successfully parsed config values for CreateBastion - Subscription: $subscriptionId, ResourceGroup: $resourceGroupName")
+        return @{
+            SubscriptionId = $subscriptionId
+            ResourceGroupName = $resourceGroupName
+        }
     }
     
     [object] FindExistingBastion([string]$resourceGroupName, [string]$subscriptionId) {
@@ -283,18 +313,63 @@ class CleanupBastionAction : BaseAction {
     }
     
     [hashtable] ParseScope([string]$scope) {
-        # Same parsing logic as CreateBastionAction
-        if ($scope -match '/subscriptions/([^/]+)') {
-            $subscriptionId = $Matches[1]
-            $resourceGroupName = $this.GlobalConfig.defaultResourceGroupPattern -replace '\{subscriptionId\}', $subscriptionId
-            
-            return @{
-                SubscriptionId = $subscriptionId
-                ResourceGroupName = $resourceGroupName
-            }
+        # Always use config values - completely ignore parsed scope  
+        $subscriptionId = $null
+        $resourceGroupName = $null
+
+        $this.LogInfo("ParseScope called for CleanupBastion - ignoring scope parameter and using config values only")
+
+        # Debug the global config structure
+        $this.LogInfo("GlobalConfig keys: $($this.GlobalConfig.Keys -join ', ')")
+        $this.LogInfo("GlobalConfig.defaultSubscriptionId exists: $($this.GlobalConfig.ContainsKey('defaultSubscriptionId'))")
+        $this.LogInfo("GlobalConfig.defaultResourceGroupName exists: $($this.GlobalConfig.ContainsKey('defaultResourceGroupName'))")
+
+        # Always use global config values first (most reliable and consistent)
+        if ($this.GlobalConfig.ContainsKey('defaultSubscriptionId') -and $this.GlobalConfig.defaultSubscriptionId) {
+            $subscriptionId = $this.GlobalConfig.defaultSubscriptionId
+            $this.LogInfo("Using default subscription ID from global config: $subscriptionId")
+        } elseif ($this.Config.parameters.ContainsKey('subscriptionId') -and $this.Config.parameters.subscriptionId -and $this.Config.parameters.subscriptionId -ne '<your-subscription-id>') {
+            $subscriptionId = $this.Config.parameters.subscriptionId
+            $this.LogInfo("Using subscription ID from action config: $subscriptionId")
         }
-        
-        return $null
+
+        # Always use global config values first (most reliable and consistent)
+        if ($this.GlobalConfig.ContainsKey('defaultResourceGroupName') -and $this.GlobalConfig.defaultResourceGroupName) {
+            $resourceGroupName = $this.GlobalConfig.defaultResourceGroupName
+            $this.LogInfo("Using default resource group from global config: $resourceGroupName")
+        } elseif ($this.Config.parameters.ContainsKey('resourceGroupName') -and $this.Config.parameters.resourceGroupName -and $this.Config.parameters.resourceGroupName -ne '<your-resource-group>') {
+            $resourceGroupName = $this.Config.parameters.resourceGroupName
+            $this.LogInfo("Using resource group from action config: $resourceGroupName")
+        }
+
+        # Validate that we have both required values
+        if (-not $subscriptionId) {
+            $this.LogError("No subscription ID found in configuration")
+            $this.LogError("Global config defaultSubscriptionId: '$($this.GlobalConfig.defaultSubscriptionId)'")
+            $this.LogError("Action config subscriptionId: '$($this.Config.parameters.subscriptionId)'")
+            $this.LogError("Full GlobalConfig: $($this.GlobalConfig | ConvertTo-Json -Depth 2)")
+            return $null
+        }
+
+        if (-not $resourceGroupName) {
+            $this.LogError("No resource group name found in configuration")
+            $this.LogError("Global config defaultResourceGroupName: '$($this.GlobalConfig.defaultResourceGroupName)'")
+            $this.LogError("Action config resourceGroupName: '$($this.Config.parameters.resourceGroupName)'")
+            $this.LogError("Full GlobalConfig: $($this.GlobalConfig | ConvertTo-Json -Depth 2)")
+            return $null
+        }
+
+        # Validate subscription ID format
+        if (-not ($subscriptionId -match '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')) {
+            $this.LogError("Invalid subscription ID format in config: '$subscriptionId'")
+            return $null
+        }
+
+        $this.LogInfo("Successfully parsed config values for CleanupBastion - Subscription: $subscriptionId, ResourceGroup: $resourceGroupName")
+        return @{
+            SubscriptionId = $subscriptionId
+            ResourceGroupName = $resourceGroupName
+        }
     }
     
     [bool] CheckForOtherRoleAssignments([hashtable]$resourceInfo) {
@@ -305,39 +380,146 @@ class CleanupBastionAction : BaseAction {
     }
     
     [hashtable] RemoveBastion([hashtable]$resourceInfo) {
-        # Set context to correct subscription
-        Set-AzContext -SubscriptionId $resourceInfo.SubscriptionId
-        
-        # Find Bastion hosts
-        $bastions = Get-AzBastion -ResourceGroupName $resourceInfo.ResourceGroupName -ErrorAction SilentlyContinue
-        
-        if (-not $bastions) {
-            $this.LogInfo("No Bastion hosts found to remove")
-            return @{ Removed = $false; BastionName = $null }
+        try {
+            $this.LogInfo("RemoveBastion called with SubscriptionId: $($resourceInfo.SubscriptionId), ResourceGroupName: $($resourceInfo.ResourceGroupName)")
+            
+            # Validate inputs with detailed error messages
+            if (-not $resourceInfo) {
+                throw "Resource info is null"
+            }
+            if (-not $resourceInfo.ContainsKey('SubscriptionId') -or -not $resourceInfo.SubscriptionId) {
+                throw "Subscription ID is null or empty. ResourceInfo keys: $($resourceInfo.Keys -join ', ')"
+            }
+            if (-not $resourceInfo.ContainsKey('ResourceGroupName') -or -not $resourceInfo.ResourceGroupName) {
+                throw "Resource Group Name is null or empty. ResourceInfo keys: $($resourceInfo.Keys -join ', ')"
+            }
+            
+            # Validate subscription ID format
+            if (-not ($resourceInfo.SubscriptionId -match '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')) {
+                throw "Invalid subscription ID format: $($resourceInfo.SubscriptionId)"
+            }
+            
+            # Check current context first
+            $currentContext = Get-AzContext -ErrorAction SilentlyContinue
+            if ($currentContext) {
+                $this.LogInfo("Current Azure context: Subscription=$($currentContext.Subscription.Id), Account=$($currentContext.Account.Id)")
+                
+                # If we're already in the correct subscription, don't change context
+                if ($currentContext.Subscription.Id -eq $resourceInfo.SubscriptionId) {
+                    $this.LogInfo("Already in correct subscription context, skipping Set-AzContext")
+                } else {
+                    $this.LogInfo("Need to switch from subscription $($currentContext.Subscription.Id) to $($resourceInfo.SubscriptionId)")
+                    # Set context to correct subscription with proper error handling
+                    try {
+                        $context = Set-AzContext -SubscriptionId $resourceInfo.SubscriptionId -ErrorAction Stop
+                        $this.LogInfo("Successfully set Azure context to subscription: $($context.Subscription.Name) ($($context.Subscription.Id))")
+                    } catch {
+                        # If setting by subscription ID fails, try to list available subscriptions for debugging
+                        try {
+                            $this.LogInfo("Failed to set context to subscription $($resourceInfo.SubscriptionId). Listing available subscriptions:")
+                            $availableSubscriptions = Get-AzSubscription -ErrorAction SilentlyContinue
+                            if ($availableSubscriptions) {
+                                foreach ($sub in $availableSubscriptions) {
+                                    $this.LogInfo("Available subscription: $($sub.Name) ($($sub.Id))")
+                                }
+                            } else {
+                                $this.LogWarning("No subscriptions found or unable to list subscriptions")
+                            }
+                        } catch {
+                            $this.LogWarning("Unable to list subscriptions: $($_.Exception.Message)")
+                        }
+                        throw "Failed to set Azure context for subscription $($resourceInfo.SubscriptionId): $($_.Exception.Message)"
+                    }
+                }
+            } else {
+                $this.LogWarning("No current Azure context found - attempting to authenticate with MSI")
+                try {
+                    # Try to re-authenticate using MSI if no context exists
+                    if ($env:MSI_SECRET) {
+                        Disable-AzContextAutosave -Scope Process | Out-Null
+                        $connectResult = Connect-AzAccount -Identity -ErrorAction Stop
+                        $this.LogInfo("Successfully re-authenticated with MSI: $($connectResult.Context.Account.Id)")
+                        
+                        # Now set the subscription context
+                        $context = Set-AzContext -SubscriptionId $resourceInfo.SubscriptionId -ErrorAction Stop
+                        $this.LogInfo("Successfully set Azure context to subscription: $($context.Subscription.Name) ($($context.Subscription.Id))")
+                    } else {
+                        throw "No MSI_SECRET environment variable found and no current context"
+                    }
+                } catch {
+                    throw "Failed to authenticate: $($_.Exception.Message)"
+                }
+            }
+        }
+        catch {
+            $errorMsg = "Failed to set Azure context for subscription $($resourceInfo.SubscriptionId): $($_.Exception.Message)"
+            $this.LogError($errorMsg)
+            return @{ Removed = $false; BastionName = $null; Error = $errorMsg }
         }
         
-        $bastionToRemove = $bastions | Where-Object { $_.Name -like "*auto*" } | Select-Object -First 1
-        
-        $publicIpRemoved = $false
-        $publicIpName = $null
-        if ($bastionToRemove) {
-            $this.LogInfo("Removing Bastion: $($bastionToRemove.Name)")
-            # Get the public IP resource ID from the Bastion's IP configuration
-            $publicIpId = $bastionToRemove.IpConfigurations[0].PublicIpAddress.Id
-            if ($publicIpId) {
-                $publicIpName = ($publicIpId -split "/")[-1]
+        try {
+            # Find Bastion hosts
+            $this.LogInfo("Looking for Bastion hosts in resource group: $($resourceInfo.ResourceGroupName)")
+            $bastions = Get-AzBastion -ResourceGroupName $resourceInfo.ResourceGroupName -ErrorAction SilentlyContinue
+            
+            if (-not $bastions) {
+                $this.LogInfo("No Bastion hosts found to remove")
+                return @{ Removed = $false; BastionName = $null; PublicIpRemoved = $false; PublicIpName = $null }
             }
-            Remove-AzBastion -ResourceGroupName $resourceInfo.ResourceGroupName -Name $bastionToRemove.Name -Force
+            
+            $this.LogInfo("Found $($bastions.Count) Bastion host(s)")
+            
+            # Look for auto-created bastions first, otherwise take the first one
+            $bastionToRemove = $bastions | Where-Object { $_.Name -like "*auto*" } | Select-Object -First 1
+            if (-not $bastionToRemove) {
+                $bastionToRemove = $bastions | Select-Object -First 1
+                $this.LogInfo("No auto-created Bastion found, will remove first available: $($bastionToRemove.Name)")
+            } else {
+                $this.LogInfo("Found auto-created Bastion to remove: $($bastionToRemove.Name)")
+            }
+            
+            $publicIpRemoved = $false
+            $publicIpName = $null
+            
+            # Get the public IP resource ID from the Bastion's IP configuration
+            if ($bastionToRemove.IpConfigurations -and $bastionToRemove.IpConfigurations.Count -gt 0) {
+                $publicIpId = $bastionToRemove.IpConfigurations[0].PublicIpAddress.Id
+                if ($publicIpId) {
+                    $publicIpName = ($publicIpId -split "/")[-1]
+                    $this.LogInfo("Associated Public IP found: $publicIpName")
+                }
+            }
+            
+            # Remove Bastion
+            $this.LogInfo("Removing Bastion: $($bastionToRemove.Name)")
+            Remove-AzBastion -ResourceGroupName $resourceInfo.ResourceGroupName -Name $bastionToRemove.Name -Force -ErrorAction Stop
+            $this.LogInfo("Successfully removed Bastion: $($bastionToRemove.Name)")
+            
             # Remove the associated Public IP if found
             if ($publicIpName) {
-                $this.LogInfo("Removing Public IP: $publicIpName")
-                Remove-AzPublicIpAddress -ResourceGroupName $resourceInfo.ResourceGroupName -Name $publicIpName -Force -ErrorAction SilentlyContinue
-                $publicIpRemoved = $true
+                try {
+                    $this.LogInfo("Removing associated Public IP: $publicIpName")
+                    Remove-AzPublicIpAddress -ResourceGroupName $resourceInfo.ResourceGroupName -Name $publicIpName -Force -ErrorAction Stop
+                    $publicIpRemoved = $true
+                    $this.LogInfo("Successfully removed Public IP: $publicIpName")
+                }
+                catch {
+                    $this.LogWarning("Failed to remove Public IP $publicIpName`: $($_.Exception.Message)")
+                }
             }
-            return @{ Removed = $true; BastionName = $bastionToRemove.Name; PublicIpRemoved = $publicIpRemoved; PublicIpName = $publicIpName }
+            
+            return @{ 
+                Removed = $true; 
+                BastionName = $bastionToRemove.Name; 
+                PublicIpRemoved = $publicIpRemoved; 
+                PublicIpName = $publicIpName 
+            }
         }
-        
-        return @{ Removed = $false; BastionName = $null }
+        catch {
+            $errorMsg = "Failed to remove Bastion: $($_.Exception.Message)"
+            $this.LogError($errorMsg)
+            return @{ Removed = $false; BastionName = $null; Error = $errorMsg }
+        }
     }
 }
 

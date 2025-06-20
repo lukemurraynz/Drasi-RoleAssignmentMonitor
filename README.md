@@ -28,12 +28,12 @@ The repository now includes a PowerShell-based Azure Function (`AzureFunction/`)
 - **Removes** Bastion hosts when roles are revoked (if no other VMs need access)
 - **Provides** an extensible framework for managing other Azure resources based on role assignments
 
-This follows an event-driven automation pattern inspired by [Bellhop](https://github.com/Azure/bellhop), but uses Drasi reactions instead of tag-based scheduling.
+This follows an event-driven automation pattern, using Drasi reactions instead of tag-based scheduling.
 
 ### Architecture Overview
 
 ```
-Azure Activity Logs → Event Hub → Drasi Source → Continuous Query → Reaction → Event Grid → Azure Function → Bastion Management
+Azure Activity Logs → Event Hub → Drasi Source → Continuous Query → Reaction → Event Grid → Azure Function → Bastion
 ```
 
 This repository now includes an **Azure Function** that extends the event processing pipeline to automatically manage Azure Bastion resources based on VM Administrator Login role assignments.
@@ -47,7 +47,7 @@ Before getting started, ensure you have:
 - **Drasi CLI** installed ([installation guide](https://drasi.io/getting-started/))
 - **Azure Event Hub** configured to receive Activity Logs
 - **Azure Event Grid** topic for receiving notifications
-- **Managed Identity** with appropriate permissions
+- **Managed Identity** with appropriate permissions _for AKS Cluster_ or _Azure Resource modification_
 - **Azure Function App** (for Bastion management) with PowerShell runtime
 
 ## Quick Start
@@ -190,7 +190,7 @@ See `AzureFunction/README.md` for detailed configuration and deployment instruct
 
 **UPDATED**: This modular PowerShell-based Azure Function provides configuration-driven automation:
 
-- **Modular Design**: Inspired by [Bellhop](https://github.com/Azure/bellhop) pattern for extensible automation
+- **Modular Design**: Pattern for extensible automation
 - **Configuration-Driven**: Simple JSON configuration maps RBAC roles to actions
 - **Event-Driven**: Triggered by Event Grid events from the Drasi reaction
 - **Beginner-Friendly**: Designed for first-time Azure and PowerShell users
@@ -208,9 +208,8 @@ Key features:
 
 #### Quick Start
 1. Configure role mappings in `config.json`
-2. Enable dry run mode for testing
-3. Deploy Function App and configure Event Grid
-4. Monitor logs for automation results
+2. Deploy Function App and configure Event Grid
+3. Monitor logs for automation results
 
 #### Adding New Roles/Actions
 - **New Role**: Add role definition ID and actions to `config.json`
@@ -285,7 +284,7 @@ You can add multiple reactions to the same query:
 - **[Drasi Documentation](https://drasi.io/)** - Complete platform documentation
 - **[Drasi Query Language Reference](https://drasi.io/reference/query-language/)** - DQL syntax and functions
 - **[Drasi GitHub Organization](https://github.com/orgs/drasi-project/repositories)** - Source code and examples
-- **[Azure Activity Log Schema](https://docs.microsoft.com/en-us/azure/azure-monitor/essentials/activity-log-schema)** - Understanding Azure Activity Log events
+- **[Azure Activity Log Schema](https://learn.microsoft.com/azure/azure-monitor/platform/activity-log-schema?WT.mc_id=AZ-MVP-5004796)** - Understanding Azure Activity Log events
 
 ## Contributing
 

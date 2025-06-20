@@ -2,8 +2,7 @@
   "global": {
     "enableLogging": true,
     "defaultSubscriptionId": "6bca53bc-98d9-4cd3-92e7-0364c7bffac4",
-    "defaultResourceGroupName": "rg-6bca53bc",
-    "defaultResourceGroupPattern": "rg-{subscriptionId}",
+    "defaultResourceGroupName": "rg-11B74992",
     "tags": {
       "CreatedBy": "Drasi-AutoBastion",
       "Purpose": "Automated-RBAC-Response"
@@ -25,7 +24,9 @@
       "enabled": true,
       "parameters": {
         "preserveIfOtherAssignments": true,
-        "gracePeriodMinutes": 5
+        "gracePeriodMinutes": 5,
+        "subscriptionId": "<your-subscription-id>",
+        "resourceGroupName": "<your-resource-group>"
       }
     }
   },
