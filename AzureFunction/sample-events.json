@@ -1,0 +1,207 @@
+# Sample test data for the modular Azure Function
+# Use these samples to test different scenarios
+
+# VM Administrator Login role assignment (create)
+{
+  "id": "test-event-1",
+  "source": "azure-role-change-vmadminlogin",
+  "type": "Drasi.ChangeEvent",
+  "data": {
+    "op": "i",
+    "payload": {
+      "after": {
+        "callerIpAddress": "203.0.113.1",
+        "category": "Administrative",
+        "correlationId": "test-correlation-id-001",
+        "entity": null,
+        "identity": {
+          "authorization": {
+            "action": "Microsoft.Authorization/roleAssignments/write",
+            "evidence": {
+              "role": "Subscription Admin"
+            },
+            "scope": "/subscriptions/test-subscription-id/providers/Microsoft.Authorization/roleAssignments/test-assignment-id"
+          }
+        },
+        "operationName": "MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE",
+        "operationType": "CREATE_OR_UPDATE",
+        "properties": {
+          "entity": "/subscriptions/test-subscription-id/providers/Microsoft.Authorization/roleAssignments/test-assignment-id",
+          "eventCategory": "Administrative",
+          "hierarchy": "test-tenant-id/test-subscription-id",
+          "message": "Microsoft.Authorization/roleAssignments/write",
+          "requestbody": "{\"Id\":\"test-assignment-id\",\"Properties\":{\"PrincipalId\":\"test-principal-id\",\"PrincipalType\":\"User\",\"RoleDefinitionId\":\"/providers/Microsoft.Authorization/roleDefinitions/1c0163c0-47e6-4577-8991-ea5c82e286e4\",\"Scope\":\"/subscriptions/test-subscription-id\",\"Condition\":null,\"ConditionVersion\":null}}"
+        },
+        "resourceId": "/SUBSCRIPTIONS/TEST-SUBSCRIPTION-ID/PROVIDERS/MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/TEST-ASSIGNMENT-ID",
+        "resultSignature": "Started.",
+        "resultType": "Start",
+        "roleLocation": "Australia Southeast",
+        "tenantId": "test-tenant-id",
+        "timestamp": "2024-01-01T12:00:00.0000000Z"
+      },
+      "source": {
+        "queryId": "azure-role-change-vmadminlogin",
+        "ts_ms": 1704110400000
+      }
+    },
+    "seq": 0,
+    "ts_ms": 1704110400000
+  },
+  "time": "2024-01-01T12:00:00.000000+00:00",
+  "specversion": "1.0"
+}
+
+# VM Administrator Login role assignment (delete)
+{
+  "id": "test-event-2",
+  "source": "azure-role-change-vmadminlogin",
+  "type": "Drasi.ChangeEvent",
+  "data": {
+    "op": "d",
+    "payload": {
+      "before": {
+        "callerIpAddress": "203.0.113.1",
+        "category": "Administrative",
+        "correlationId": "test-correlation-id-002",
+        "entity": null,
+        "identity": {
+          "authorization": {
+            "action": "Microsoft.Authorization/roleAssignments/delete",
+            "evidence": {
+              "role": "Subscription Admin"
+            },
+            "scope": "/subscriptions/test-subscription-id/providers/Microsoft.Authorization/roleAssignments/test-assignment-id"
+          }
+        },
+        "operationName": "MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/DELETE",
+        "operationType": "DELETE",
+        "properties": {
+          "entity": "/subscriptions/test-subscription-id/providers/Microsoft.Authorization/roleAssignments/test-assignment-id",
+          "eventCategory": "Administrative",
+          "hierarchy": "test-tenant-id/test-subscription-id",
+          "message": "Microsoft.Authorization/roleAssignments/delete",
+          "requestbody": "{\"Id\":\"test-assignment-id\",\"Properties\":{\"PrincipalId\":\"test-principal-id\",\"PrincipalType\":\"User\",\"RoleDefinitionId\":\"/providers/Microsoft.Authorization/roleDefinitions/1c0163c0-47e6-4577-8991-ea5c82e286e4\",\"Scope\":\"/subscriptions/test-subscription-id\",\"Condition\":null,\"ConditionVersion\":null}}"
+        },
+        "resourceId": "/SUBSCRIPTIONS/TEST-SUBSCRIPTION-ID/PROVIDERS/MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/TEST-ASSIGNMENT-ID",
+        "resultSignature": "Completed.",
+        "resultType": "Success",
+        "roleLocation": "Australia Southeast",
+        "tenantId": "test-tenant-id",
+        "timestamp": "2024-01-01T13:00:00.0000000Z"
+      },
+      "source": {
+        "queryId": "azure-role-change-vmadminlogin",
+        "ts_ms": 1704114000000
+      }
+    },
+    "seq": 1,
+    "ts_ms": 1704114000000
+  },
+  "time": "2024-01-01T13:00:00.000000+00:00",
+  "specversion": "1.0"
+}
+
+# VM User Login role assignment (create) - Alternative role
+{
+  "id": "test-event-3",
+  "source": "azure-role-change-vmadminlogin",
+  "type": "Drasi.ChangeEvent",
+  "data": {
+    "op": "i",
+    "payload": {
+      "after": {
+        "callerIpAddress": "203.0.113.1",
+        "category": "Administrative",
+        "correlationId": "test-correlation-id-003",
+        "entity": null,
+        "identity": {
+          "authorization": {
+            "action": "Microsoft.Authorization/roleAssignments/write",
+            "evidence": {
+              "role": "Subscription Admin"
+            },
+            "scope": "/subscriptions/test-subscription-id/providers/Microsoft.Authorization/roleAssignments/test-assignment-id-2"
+          }
+        },
+        "operationName": "MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE",
+        "operationType": "CREATE_OR_UPDATE",
+        "properties": {
+          "entity": "/subscriptions/test-subscription-id/providers/Microsoft.Authorization/roleAssignments/test-assignment-id-2",
+          "eventCategory": "Administrative",
+          "hierarchy": "test-tenant-id/test-subscription-id",
+          "message": "Microsoft.Authorization/roleAssignments/write",
+          "requestbody": "{\"Id\":\"test-assignment-id-2\",\"Properties\":{\"PrincipalId\":\"test-principal-id-2\",\"PrincipalType\":\"User\",\"RoleDefinitionId\":\"/providers/Microsoft.Authorization/roleDefinitions/fb879df8-f326-4884-b1cf-06f3ad86be52\",\"Scope\":\"/subscriptions/test-subscription-id\",\"Condition\":null,\"ConditionVersion\":null}}"
+        },
+        "resourceId": "/SUBSCRIPTIONS/TEST-SUBSCRIPTION-ID/PROVIDERS/MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/TEST-ASSIGNMENT-ID-2",
+        "resultSignature": "Started.",
+        "resultType": "Start",
+        "roleLocation": "Australia Southeast", 
+        "tenantId": "test-tenant-id",
+        "timestamp": "2024-01-01T14:00:00.0000000Z"
+      },
+      "source": {
+        "queryId": "azure-role-change-vmadminlogin",
+        "ts_ms": 1704117600000
+      }
+    },
+    "seq": 2,
+    "ts_ms": 1704117600000
+  },
+  "time": "2024-01-01T14:00:00.000000+00:00",
+  "specversion": "1.0"
+}
+
+# Non-VM role assignment (should be ignored by default config)
+{
+  "id": "test-event-4",
+  "source": "azure-role-change-vmadminlogin",
+  "type": "Drasi.ChangeEvent",
+  "data": {
+    "op": "i",
+    "payload": {
+      "after": {
+        "callerIpAddress": "203.0.113.1",
+        "category": "Administrative",
+        "correlationId": "test-correlation-id-004",
+        "entity": null,
+        "identity": {
+          "authorization": {
+            "action": "Microsoft.Authorization/roleAssignments/write",
+            "evidence": {
+              "role": "Subscription Admin"
+            },
+            "scope": "/subscriptions/test-subscription-id/providers/Microsoft.Authorization/roleAssignments/test-assignment-id-3"
+          }
+        },
+        "operationName": "MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE",
+        "operationType": "CREATE_OR_UPDATE",
+        "properties": {
+          "entity": "/subscriptions/test-subscription-id/providers/Microsoft.Authorization/roleAssignments/test-assignment-id-3",
+          "eventCategory": "Administrative",
+          "hierarchy": "test-tenant-id/test-subscription-id",
+          "message": "Microsoft.Authorization/roleAssignments/write",
+          "requestbody": "{\"Id\":\"test-assignment-id-3\",\"Properties\":{\"PrincipalId\":\"test-principal-id-3\",\"PrincipalType\":\"User\",\"RoleDefinitionId\":\"/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7\",\"Scope\":\"/subscriptions/test-subscription-id\",\"Condition\":null,\"ConditionVersion\":null}}"
+        },
+        "resourceId": "/SUBSCRIPTIONS/TEST-SUBSCRIPTION-ID/PROVIDERS/MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/TEST-ASSIGNMENT-ID-3",
+        "resultSignature": "Started.",
+        "resultType": "Start",
+        "roleLocation": "Australia Southeast",
+        "tenantId": "test-tenant-id",
+        "timestamp": "2024-01-01T15:00:00.0000000Z"
+      },
+      "source": {
+        "queryId": "azure-role-change-vmadminlogin",
+        "ts_ms": 1704121200000
+      }
+    },
+    "seq": 3,
+    "ts_ms": 1704121200000
+  },
+  "time": "2024-01-01T15:00:00.000000+00:00",
+  "specversion": "1.0"
+}
+
+# Role Definition IDs for reference:
+# 1c0163c0-47e6-4577-8991-ea5c82e286e4 = Virtual Machine Administrator Login
+# fb879df8-f326-4884-b1cf-06f3ad86be52 = Virtual Machine User Login  
+# acdd72a7-3385-48ef-bd42-f606fba81ae7 = Reader (should be ignored by default config)

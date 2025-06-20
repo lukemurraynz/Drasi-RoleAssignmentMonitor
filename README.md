@@ -1,273 +1,468 @@
 # Azure Role Assignment Monitor with Drasi
 
-This repository demonstrates how to monitor Azure role assignment changes in real-time using [Drasi](https://drasi.io/), a continuous event processing platform. The system watches for Azure role assignment creations, updates, and deletions, then automatically triggers notifications via Azure Event Grid.
+> **✨ Readme✨**
 
-## What is Drasi?
+## What Does This Project Do?
 
-[Drasi](https://drasi.io/) is a modern event-driven platform that enables real-time monitoring and reaction to changes in your data. It uses a declarative approach with three main components:
+Imagine you work at a company where people frequently need access to virtual machines (VMs) in Azure. Traditionally, an admin would:
 
-- **Sources**: Where data comes from (Event Hub, databases, APIs, etc.)
-- **Continuous Queries**: What changes to watch for (using Drasi Query Language - DQL)
-- **Reactions**: What to do when changes occur (send to Event Grid, webhook, etc.)
+1. **Manually** assign VM access permissions to users
+2. **Manually** create a secure connection tool (Azure Bastion) for each VM
+3. **Manually** clean up these resources when access is no longer needed
 
-## What This Repository Does
+This project **automates all of that**! It watches for permission changes and automatically creates or removes the necessary infrastructure.
 
-This implementation monitors Azure Activity Logs for role assignment operations and automatically:
+### Real-World Example
 
-1. **Captures** Azure role assignment events from an Event Hub
-2. **Processes** the events using a continuous query to extract relevant information
-3. **Triggers** notifications to Azure Event Grid when role assignments are created, updated, or deleted
-4. **Manages** Azure Bastion resources automatically via PowerShell Azure Function
+When Sarah from Marketing needs access to a VM:
+1. An admin assigns her "VM Administrator Login" role
+2. **Automatically**, this system detects the change
+3. **Automatically**, it creates a secure Bastion host for that VM
+4. Sarah can now securely connect to the VM
+5. When her access is revoked, the Bastion is **automatically** cleaned up
 
-### New: Azure Function for Bastion Management
+## Key Technologies Explained
 
-The repository now includes a PowerShell-based Azure Function (`AzureFunction/`) that:
+### 🔧 **Azure Functions**
+Think of [Azure Functions](https://learn.microsoft.com/azure/azure-functions/functions-overview?WT.mc_id=AZ-MVP-5004796) like "mini-programs" that run in the cloud. They only execute when triggered by an event (like receiving a notification). You don't need to manage servers - Azure handles all the infrastructure.
 
-- **Receives** Event Grid events from the Drasi reaction
-- **Creates** Azure Bastion hosts when VM Administrator Login roles are assigned
-- **Removes** Bastion hosts when roles are revoked (if no other VMs need access)
-- **Provides** an extensible framework for managing other Azure resources based on role assignments
+### 📊 **Drasi**
+[Drasi](https://drasi.io/) is a platform that watches for changes in your data and reacts instantly. It's like having a super-smart assistant that monitors everything and takes action when specific things happen.
 
-This follows an event-driven automation pattern inspired by [Bellhop](https://github.com/Azure/bellhop), but uses Drasi reactions instead of tag-based scheduling.
+**Drasi has three parts:**
+- **Sources**: Where data comes from (in our case, Azure Activity Logs)
+- **Continuous Queries**: What changes to watch for (role assignments)
+- **Reactions**: What to do when changes happen (notify our Azure Function)
 
-### Architecture Overview
+### 🛡️ **Azure Bastion**
+A secure way to connect to VMs without exposing them to the internet. Think [Azure Bastion](https://learn.microsoft.com/azure/bastion/bastion-overview?WT.mc_id=AZ-MVP-5004796) it as a secure "bridge" that lets users safely access VMs through their web browser.
+
+### 💻 **PowerShell**
+A scripting language that's excellent for automating Azure tasks. Don't worry if you're new to it - our code is well-commented and modular!
+
+## How The System Works
 
 ```
-Azure Activity Logs → Event Hub → Drasi Source → Continuous Query → Reaction → Event Grid → Azure Function → Bastion Management
+📋 Azure Activity Logs → 📨 Event Hub → 🔍 Drasi → 📧 Event Grid → ⚡ Azure Function → 🛡️ Bastion
 ```
 
-This repository now includes an **Azure Function** that extends the event processing pipeline to automatically manage Azure Bastion resources based on VM Administrator Login role assignments.
+### Step-by-Step Flow
 
-## Prerequisites
+1. **Azure Activity Logs**: Every action in Azure (like assigning roles) gets logged
+2. **Event Hub**: Collects these logs in real-time
+3. **Drasi Source**: Reads events from the Event Hub
+4. **Drasi Continuous Query**: Filters for role assignment events we care about
+5. **Drasi Reaction**: Sends notifications to Event Grid when matches are found
+6. **Azure Function**: Receives the notification and takes action
+7. **Bastion Management**: Creates or removes Azure Bastion hosts as needed
 
-Before getting started, ensure you have:
+## What's In This Repository
 
-- **Azure CLI** installed and authenticated
-- **kubectl** configured to access your Kubernetes cluster
-- **Drasi CLI** installed ([installation guide](https://drasi.io/getting-started/))
-- **Azure Event Hub** configured to receive Activity Logs
-- **Azure Event Grid** topic for receiving notifications
-- **Managed Identity** with appropriate permissions
-- **Azure Function App** (for Bastion management) with PowerShell runtime
+```
+📁 Sources/              # Drasi configuration for reading Azure Event Hub
+📁 Queries/              # Drasi query that watches for role changes
+📁 Reactions/            # Drasi reaction that sends notifications
+📁 AzureFunction/        # PowerShell code that manages Azure resources
+   📄 run.ps1           # Main function entry point
+   📄 ActionHandlers.ps1 # Classes that perform specific actions
+   📄 EventProcessor.ps1 # Parses incoming events
+   📄 config.json       # Configuration for actions and roles
+```
 
-## Quick Start
+## Prerequisites (What You Need Before Starting)
 
-### 1. Install and Initialize Drasi
+### 🔧 **Software to Install**
+- **Azure CLI**: Tool for managing Azure resources ([install guide](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli))
+- **kubectl**: Tool for managing Kubernetes clusters ([install guide](https://kubernetes.io/docs/tasks/tools/))
+- **Drasi CLI**: Tool for managing Drasi ([install guide](https://drasi.io/getting-started/))
 
-Choose one of the deployment options below:
+### ☁️ **Azure Resources You Need**
+- **Azure Event Hub**: Where Azure Activity Logs will be sent
+- **Azure Event Grid Topic**: For receiving notifications from Drasi
+- **Azure Function App**: With PowerShell 7 runtime to run our automation code
+- **Managed Identity**: Special account that allows secure access to Azure resources
 
-#### Option A: Docker Deployment (Recommended for Development)
+### 🔐 **Permissions Required**
+Your Managed Identity needs these roles:
+- `Network Contributor` (to create/delete Bastion hosts)
+- `Virtual Machine Contributor` (to work with VMs)
+- `Reader` (to discover existing resources)
 
+## Quick Start Guide
+
+### 1. Deploy Drasi
+
+Choose how you want to run Drasi:
+
+#### Option A: Docker (Easiest for Testing)
 ```bash
 # Initialize Drasi with Docker support
 drasi init --docker
 ```
 
-#### Option B: Kubernetes Deployment (Production)
-
+#### Option B: Kubernetes (Best for Production)
 ```bash
-# Install kubectl if not already installed
-sudo az aks install-cli
-
-# Login to Azure and get cluster credentials
-az login
-az aks get-credentials --resource-group <your-resource-group> --name <your-cluster-name>
-
-# Initialize Drasi on Kubernetes
-drasi init --namespace drasi-system --version 0.3.2
-
-# Verify installation
-kubectl get pods -n drasi-system
+# Initialize Drasi on your Kubernetes cluster
+drasi init
 ```
 
-### 2. Configure Azure Authentication
+### 2. Configure the Azure Function
 
-For Kubernetes deployments, set up managed identity federated credentials:
+#### Update Configuration File
+Edit `AzureFunction/config.json` with your Azure details:
 
+```json
+{
+  "global": {
+    "enableLogging": true,
+    "defaultSubscriptionId": "YOUR-SUBSCRIPTION-ID",
+    "defaultResourceGroupName": "YOUR-RESOURCE-GROUP",
+    "tags": {
+      "CreatedBy": "Drasi-AutoBastion",
+      "Purpose": "Automated-RBAC-Response"
+    }
+  },
+  "actions": {
+    "CreateBastion": {
+      "enabled": true,
+      "parameters": {
+        "bastionNamePrefix": "bastion-auto",
+        "subnetAddressPrefix": "10.0.1.0/26",
+        "publicIpNamePrefix": "pip-bastion-auto"
+      }
+    }
+  }
+}
+```
+
+#### Deploy the Azure Function
+1. Create an Azure Function App with PowerShell 7 runtime
+2. Enable Managed Identity for the Function App
+3. Upload the contents of the `AzureFunction/` folder
+4. Configure Event Grid subscription to trigger the function
+
+### 3. Deploy Drasi Components
+
+#### Deploy the Event Hub Source
 ```bash
-# Create federated credential for the Event Hub source
-az identity federated-credential create \
-    --name drasi-eventhub \
-    --identity-name "<your-managed-identity-name>" \
-    --resource-group "<your-resource-group>" \
-    --issuer "<your-aks-oidc-issuer-url>" \
-    --subject system:serviceaccount:"drasi-system":"source.azure-role-eventhub-source" \
-    --audience api://AzureADTokenExchange
-
-# Create federated credential for the reaction
-az identity federated-credential create \
-    --name drasi-reaction \
-    --identity-name "<your-managed-identity-name>" \
-    --resource-group "<your-resource-group>" \
-    --issuer "<your-aks-oidc-issuer-url>" \
-    --subject system:serviceaccount:"drasi-system":"reaction.my-reactionvmlogin" \
-    --audience api://AzureADTokenExchange
-```
-
-### 3. Configure Your Environment
-
-Update the configuration files with your Azure resources:
-
-#### Update Event Hub Source (`Sources/eventhubsource.yaml`)
-```yaml
-# Update these values with your Azure resources
-spec:
-  identity:
-    clientId: <your-managed-identity-client-id>
-  properties:
-    host: <your-eventhub-namespace>.servicebus.windows.net
-    eventHubs:
-      - <your-eventhub-name>
-```
-
-#### Update Event Grid Reaction (`Reactions/azure-role-change-vmadminloginaction.yaml`)
-```yaml
-# Update these values with your Event Grid topic
-spec:
-  properties: 
-    eventGridUri: https://<your-eventgrid-topic>.<region>.eventgrid.azure.net/api/events
-    eventGridKey: <your-eventgrid-access-key>
-```
-
-### 4. Deploy the Drasi Components
-
-Deploy the components in the correct order:
-
-```bash
-# 1. Deploy the Event Hub source
+# Update Sources/eventhubsource.yaml with your Event Hub details
 drasi apply -f Sources/eventhubsource.yaml
+```
 
-# 2. Deploy the continuous query
+#### Deploy the Continuous Query
+```bash
+# This watches for role assignment changes
 drasi apply -f Queries/azure-role-change-vmadminlogin.yaml
+```
 
-# 3. Deploy the Event Grid reaction
+#### Deploy the Reaction
+```bash
+# Update Reactions/azure-role-change-vmadminloginaction.yaml with your Event Grid details
 drasi apply -f Reactions/azure-role-change-vmadminloginaction.yaml
 ```
 
-### 5. Verify Deployment
+### 4. Test the System
 
-Check that all components are running:
-
+Create a test role assignment:
 ```bash
-# List all Drasi resources
-drasi list source
-drasi list query
-drasi list reaction
-
-# Check detailed status
-drasi describe source azure-role-eventhub-source
-drasi describe query azure-role-change-vmadminlogin
-drasi describe reaction my-reactionvmlogin
+# Assign VM Administrator Login role to test
+az role assignment create \
+  --assignee "user@domain.com" \
+  --role "Virtual Machine Administrator Login" \
+  --scope "/subscriptions/YOUR-SUB-ID/resourceGroups/YOUR-RG/providers/Microsoft.Compute/virtualMachines/YOUR-VM"
 ```
 
-### 6. Deploy the Azure Function (Optional)
+Watch the logs in your Azure Function to see the automation in action!
 
-If you want automatic Bastion management:
+## Visual Quick Start Overview
 
-```bash
-# Navigate to the deployment directory
-cd Deployment
-
-# Run the deployment script
-./deploy.sh
-
-# Follow prompts to configure the Function App
-# This will create:
-# - Azure Function App with PowerShell runtime
-# - Application Insights for monitoring
-# - Required role assignments
-# - Event Grid webhook configuration
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   Step 1    │    │   Step 2    │    │   Step 3    │    │   Step 4    │
+│             │    │             │    │             │    │             │
+│ Install     │───▶│ Configure   │───▶│ Deploy      │───▶│ Test        │
+│ Drasi CLI   │    │ Azure       │    │ Components  │    │ System      │
+│             │    │ Function    │    │             │    │             │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
 ```
 
-## Understanding the Components
+## Understanding the Azure Function Code
 
-### Azure Function for Bastion Management (`AzureFunction/`)
+The Azure Function is the "brain" of our automation. Here's how it's organized:
 
-**NEW**: This PowerShell-based Azure Function provides automated Bastion management:
+### 📄 **run.ps1** - The Main Entry Point
+This file receives Event Grid notifications and orchestrates the response:
 
-- **Event-Driven**: Triggered by Event Grid events from the Drasi reaction
-- **Intelligent Logic**: Creates Bastion only when needed, removes when safe
-- **Extensible Design**: Framework supports additional resources and roles
-- **Security-First**: Uses managed identity and follows least-privilege principles
-- **Well-Architected**: Implements reliability, security, and cost optimization patterns
-
-Key features:
-- Automatic Azure Bastion creation for VMs with administrator access
-- Smart cleanup that preserves Bastion when other VMs need access  
-- Modular architecture inspired by [Bellhop](https://github.com/Azure/bellhop)
-- Comprehensive logging and monitoring via Application Insights
-- Configuration-driven behavior for easy customization
-
-See `AzureFunction/README.md` for detailed documentation.
-
-### Event Hub Source (`Sources/eventhubsource.yaml`)
-This source connects to an Azure Event Hub that receives Azure Activity Logs. It:
-- Monitors specific Event Hub for role assignment events
-- Provides a `bootstrapWindow` to catch recent events on startup
-
-### Continuous Query (`Queries/azure-role-change-vmadminlogin.yaml`)
-
-This query uses [Drasi Query Language (DQL)](https://drasi.io/reference/query-language/) to:
-- Extract role assignment events from the Event Hub stream
-- Filter for CREATE, UPDATE, and DELETE operations
-- Transform the data into a structured format
-- Continuously monitor for new events
-
-Key features:
-- **Event Filtering**: Only processes role assignment operations
-- **Data Transformation**: Extracts relevant fields like correlation ID, timestamp, and operation type
-- **Real-time Processing**: Processes events as they arrive
-
-### Event Grid Reaction (`Reactions/azure-role-change-vmadminloginaction.yaml`)
-
-This reaction:
-- Subscribes to results from the continuous query
-- Sends formatted notifications to Azure Event Grid
-- Uses `unpacked` format for easy consumption by downstream systems
-
-## Monitoring and Troubleshooting
-
-### View Logs
-
-```bash
-# For Kubernetes deployments
-kubectl logs -n drasi-system -l app=drasi-source --tail=100
-kubectl logs -n drasi-system -l app=drasi-query --tail=100
-kubectl logs -n drasi-system -l app=drasi-reaction --tail=100
-
-# For Docker deployments
-docker logs drasi-source
-docker logs drasi-query
-docker logs drasi-reaction
+```powershell
+# 1. Validates the incoming event
+# 2. Parses role assignment details
+# 3. Determines what actions to take
+# 4. Executes the actions
+# 5. Logs the results
 ```
 
-### Common Issues
+### 📄 **EventProcessor.ps1** - Event Understanding
+This file contains smart logic to understand different types of role assignment events:
 
-1. **Authentication Errors**: Verify managed identity permissions and federated credentials
-2. **Event Hub Connection**: Check network connectivity and Event Hub configuration
-3. **Query Errors**: Validate DQL syntax against the [query language reference](https://drasi.io/reference/query-language/)
+```powershell
+# Extracts information like:
+# - What role was assigned/removed?
+# - Who got the role?
+# - What resource is involved?
+# - When did it happen?
+```
 
-## Customization
+### 📄 **ActionHandlers.ps1** - The Action Performers
+This file contains "action classes" that do the actual work:
 
-### Modifying the Query
+```powershell
+# CreateBastionAction: Creates Bastion hosts
+# CleanupBastionAction: Removes Bastion hosts
+# Future actions can be added here!
+```
 
-To monitor different events or change the data transformation, edit `Queries/azure-role-change-vmadminlogin.yaml`. Refer to the [Drasi Query Language documentation](https://drasi.io/reference/query-language/) for syntax and available functions.
+### 📄 **config.json** - The Control Center
+This file defines:
+- Which roles trigger which actions
+- Configuration parameters for each action
+- Global settings like logging and tagging
 
-### Adding More Reactions
+## How to Extend This System
 
-You can add multiple reactions to the same query:
-- Email notifications
-- Slack messages
-- Database updates
-- Custom webhooks
+Want to add new automation? Here's how:
 
-## Resources
+### 📋 **Adding a New Role**
 
-- **[Drasi Documentation](https://drasi.io/)** - Complete platform documentation
-- **[Drasi Query Language Reference](https://drasi.io/reference/query-language/)** - DQL syntax and functions
-- **[Drasi GitHub Organization](https://github.com/orgs/drasi-project/repositories)** - Source code and examples
-- **[Azure Activity Log Schema](https://docs.microsoft.com/en-us/azure/azure-monitor/essentials/activity-log-schema)** - Understanding Azure Activity Log events
+1. Find the role definition ID in Azure:
+```bash
+az role definition list --name "Your Role Name" --query "[].name"
+```
+
+2. Add to `config.json`:
+```json
+"roleMappings": {
+  "/providers/Microsoft.Authorization/roleDefinitions/YOUR-ROLE-ID": "Your Role Name"
+},
+"actions": {
+  "YourNewAction": {
+    "enabled": true,
+    "parameters": {
+      "setting1": "value1"
+    }
+  }
+}
+```
+
+### ⚡ **Creating a New Action**
+
+1. Create a new class in `ActionHandlers.ps1`:
+```powershell
+class YourNewAction : BaseAction {
+    YourNewAction([hashtable]$config, [hashtable]$globalConfig) : base($config, $globalConfig) {}
+    
+    [ActionResult] Execute([hashtable]$context) {
+        $this.LogInfo("Starting your new action...")
+        
+        try {
+            # Your automation logic here
+            # For example: Create storage account, send email, etc.
+            
+            return [ActionResult]::new($true, "Action completed successfully", @{})
+        }
+        catch {
+            return [ActionResult]::new($false, "Action failed: $($_.Exception.Message)", @{})
+        }
+    }
+}
+```
+
+2. Register your action in the factory function:
+```powershell
+function New-Action {
+    # ... existing code ...
+    switch ($ActionName) {
+        "YourNewAction" { 
+            return [YourNewAction]::new($Config, $GlobalConfig) 
+        }
+        # ... other actions ...
+    }
+}
+```
+
+### 🔍 **Modifying the Drasi Query**
+
+Want to watch for different events? Edit `Queries/azure-role-change-vmadminlogin.yaml`:
+
+```yaml
+# Change the filter to watch for different operations
+selector: $.records[?(@.operationName == 'YOUR.OPERATION/HERE')]
+
+# Or modify the query to return different data
+query: |
+  MATCH (r:RoleAssignment)
+  WHERE r.operationName CONTAINS 'YOUR_FILTER'
+  RETURN r.customField AS customData
+```
+
+## Troubleshooting
+
+### 🚨 **Common Issues**
+
+#### "Function not triggering"
+- Check Event Grid subscription is pointing to your function
+- Verify Drasi reaction has correct Event Grid URL and key
+- Look at Azure Function logs for errors
+
+#### "Permission denied errors"
+- Ensure Managed Identity has required roles assigned
+- Check that the identity is enabled on your Function App
+
+#### "Bastion creation failing"
+- Verify your VNet has available IP address space
+- Check that the subnet CIDR doesn't conflict with existing subnets
+- Ensure you have sufficient quota in your Azure subscription
+
+### 📊 **Debug Mode**
+
+Enable detailed logging in `config.json`:
+```json
+"global": {
+  "enableLogging": true
+}
+```
+
+### 🔍 **Testing Without Real Events**
+
+Use the sample event in `AzureFunction/sample-events.json` to test your function locally.
+
+## Security Best Practices
+
+### 🔐 **Authentication**
+- Always use Managed Identity (never store credentials in code)
+- Regularly rotate Event Grid access keys
+- Use the least-privilege principle for role assignments
+
+### 🏷️ **Resource Tagging**
+All created resources are automatically tagged for tracking:
+```json
+"tags": {
+  "CreatedBy": "Drasi-AutoBastion",
+  "Purpose": "Automated-RBAC-Response"
+}
+```
+
+### 🛡️ **Safety Features**
+- Dry-run mode available for testing
+- Cleanup actions check for other dependencies before deleting
+- All operations are logged for audit trails
+
+## Advanced Configuration
+
+### 🔧 **Fine-tuning Bastion Creation**
+
+```json
+"CreateBastion": {
+  "parameters": {
+    "bastionNamePrefix": "custom-bastion",
+    "subnetAddressPrefix": "10.1.0.0/26",  // Customize IP range
+    "publicIpNamePrefix": "pip-custom",
+    "bastionSku": "Standard",              // or "Basic"
+    "scaleUnits": 2                        // Number of scale units
+  }
+}
+```
+
+### ⏱️ **Cleanup Timing**
+
+```json
+"CleanupBastion": {
+  "parameters": {
+    "preserveIfOtherAssignments": true,    // Safety check
+    "gracePeriodMinutes": 10,              // Wait before cleanup
+    "forceCleanup": false                  // Emergency override
+  }
+}
+```
+
+## Monitoring and Observability
+
+### 📈 **Azure Function Metrics**
+Monitor these key metrics in the Azure Portal:
+- Function execution count
+- Success/failure rates
+- Duration and performance
+- Error frequency
+
+### 📝 **Logging Strategy**
+The function provides structured logging:
+- `[INFO]` - Normal operations
+- `[WARNING]` - Non-critical issues  
+- `[ERROR]` - Failures requiring attention
+
+### 🔔 **Alerting**
+Set up Azure Monitor alerts for:
+- Function execution failures
+- Bastion creation/deletion events
+- Permission-related errors
+
+## Cost Management
+
+### 💰 **Azure Bastion Costs**
+- Standard SKU: ~$140/month per instance
+- Basic SKU: ~$87/month per instance
+- Consider cleanup automation to minimize costs
+
+### 📊 **Resource Optimization**
+- Use tags to track automation-created resources
+- Implement cost alerts for your resource groups
+- Regular audit of created Bastion hosts
 
 ## Contributing
 
-Feel free to submit issues, fork the repository, and create pull requests for any improvements.
+Want to improve this project? Here's how:
+
+### 🐛 **Reporting Issues**
+1. Check existing issues first
+2. Provide detailed error messages and logs
+3. Include your configuration (sanitized)
+
+### 🚀 **Adding Features**
+1. Fork the repository
+2. Create a feature branch
+3. Add your new action classes
+4. Update configuration examples
+5. Test thoroughly
+6. Submit a pull request
+
+### 📖 **Documentation**
+Help improve this README by:
+- Adding more examples
+- Clarifying complex concepts
+- Fixing typos or errors
+
+## Additional Resources
+
+### 📚 **Learning More**
+- [Drasi Documentation](https://drasi.io/)
+- [Azure Functions PowerShell Guide](https://learn.microsoft.com/azure/azure-functions/functions-reference-powershell?tabs=portal&WT.mc_id=AZ-MVP-5004796)
+- [Azure Bastion Documentation](https://docs.microsoft.com/azure/bastion/)
+- [PowerShell for Azure](https://docs.microsoft.com/powershell/azure/)
+
+### 🤝 **Community**
+- [Drasi GitHub](https://github.com/orgs/drasi-project/discussions](https://github.com/drasi-project)
+- [Azure PowerShell Community](https://github.com/Azure/azure-powershell)
+
+---
+
+**Happy Automating! 🚀**
+
+*This project demonstrates the power of event-driven automation using Drasi and Azure Functions. Start small, learn as you go, and gradually add more sophisticated automation to your environment.*
+
+## Getting Started Fast 🚀
+
+New to this project? We've made it super easy:
+
+1. **📋 Run the setup checker:** `./setup.sh` - Verifies you have everything installed
+2. **📝 Use the config template:** Copy `AzureFunction/config.template.json` to `AzureFunction/config.json`
+3. **🆘 Having issues?** Check `TROUBLESHOOTING.md` for common problems and solutions
+4. **📚 Follow the detailed guide below** for step-by-step instructions

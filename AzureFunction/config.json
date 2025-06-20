@@ -1,0 +1,37 @@
+{
+  "global": {
+    "enableLogging": true,
+    "defaultSubscriptionId": "6bca53bc-98d9-4cd3-92e7-0364c7bffac4",
+    "defaultResourceGroupName": "rg-11B74992",
+    "tags": {
+      "CreatedBy": "Drasi-AutoBastion",
+      "Purpose": "Automated-RBAC-Response"
+    }
+  },
+  "actions": {
+    "CreateBastion": {
+      "enabled": true,
+      "parameters": {
+        "bastionNamePrefix": "bastion-auto",
+        "subnetAddressPrefix": "10.0.1.0/26",
+        "publicIpNamePrefix": "pip-bastion-auto",
+        "subscriptionId": "<your-subscription-id>",
+        "resourceGroupName": "<your-resource-group>",
+        "bastionName": "<your-bastion-name>"
+      }
+    },
+    "CleanupBastion": {
+      "enabled": true,
+      "parameters": {
+        "preserveIfOtherAssignments": true,
+        "gracePeriodMinutes": 5,
+        "subscriptionId": "<your-subscription-id>",
+        "resourceGroupName": "<your-resource-group>"
+      }
+    }
+  },
+  "roleMappings": {
+    "/providers/Microsoft.Authorization/roleDefinitions/1c0163c0-47e6-4577-8991-ea5c82e286e4": "Virtual Machine Administrator Login",
+    "/providers/Microsoft.Authorization/roleDefinitions/fb879df8-f326-4884-b1cf-06f3ad86be52": "Virtual Machine User Login"
+  }
+}
