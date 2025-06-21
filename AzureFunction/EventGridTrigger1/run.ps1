@@ -1,8 +1,5 @@
 param($eventGridEvent, $TriggerMetadata)
 
-# Modular Azure Function for RBAC-driven automation
-# Inspired by Bellhop: https://azure.github.io/bellhop/#/README
-
 # Handle Drasi.ControlSignal events
 if ($eventGridEvent.type -eq 'Drasi.ControlSignal') {
     $payload = $eventGridEvent.data.payload

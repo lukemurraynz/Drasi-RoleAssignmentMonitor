@@ -74,7 +74,7 @@ az login
 az aks get-credentials --resource-group <your-resource-group> --name <your-cluster-name>
 
 # Initialize Drasi on Kubernetes
-drasi init --namespace drasi-system --version 0.3.2
+drasi init --namespace drasi-system --version 0.3.4
 
 # Verify installation
 kubectl get pods -n drasi-system

@@ -2,7 +2,7 @@
   "global": {
     "enableLogging": true,
     "defaultSubscriptionId": "6bca53bc-98d9-4cd3-92e7-0364c7bffac4",
-    "defaultResourceGroupName": "rg-11B74992",
+    "defaultResourceGroupName": "rg-bastion",
     "tags": {
       "CreatedBy": "Drasi-AutoBastion",
       "Purpose": "Automated-RBAC-Response"
