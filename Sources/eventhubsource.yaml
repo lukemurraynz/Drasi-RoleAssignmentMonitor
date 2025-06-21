@@ -5,9 +5,9 @@ spec:
   kind: EventHub
   identity:
     kind: MicrosoftEntraWorkloadID
-    clientId: b6a2b7f2-427a-4cbd-8aa8-9e9aa2c13a8f
+    clientId: 50421fa8-277f-4c22-a085-d5880422dc52
   properties:
-    host: drasitestluke.servicebus.windows.net
+    host: azrole.servicebus.windows.net
     eventHubs:
-      - eventhub1
+      - drasieventhub1
     bootstrapWindow: 5

@@ -1,4 +1,3 @@
----
 kind: ContinuousQuery
 apiVersion: v1
 name: azure-role-change-vmadminlogin
@@ -8,13 +7,13 @@ spec:
     subscriptions:
       - id: azure-role-eventhub-source
         nodes:
-          - sourceLabel: eventhub1
+          - sourceLabel: drasieventhub1
         pipeline:
           - extract-role-assignments
     middleware:
       - name: extract-role-assignments
         kind: unwind
-        eventhub1:
+        drasieventhub1:
           - selector: $.records[?(@.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE' || @.operationName == 'MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/DELETE')]
             label: RoleAssignment
             key: $.time
@@ -38,7 +37,6 @@ spec:
               requestBody: $.properties.requestbody
               resourceType: "Microsoft.Authorization/roleAssignments"
               resourceProviderName: "Microsoft.Authorization"
-
   query: |
     MATCH (r:RoleAssignment)
     RETURN r.correlationId AS correlationId,
