@@ -2,6 +2,8 @@
 
 > **✨ Readme✨**
 
+Also refer to Blog Article **[Automate Azure Bastion with Drasi Realtime RBAC Monitoring](https://luke.geek.nz/azure/drasi-bastion-rbac-automation/)**.
+
 ## What Does This Project Do?
 
 Imagine you work at a company where people frequently need access to virtual machines (VMs) in Azure. Traditionally, an admin would:
