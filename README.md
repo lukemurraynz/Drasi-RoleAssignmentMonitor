@@ -466,3 +466,222 @@ New to this project? We've made it super easy:
 2. **📝 Use the config template:** Copy `AzureFunction/config.template.json` to `AzureFunction/config.json`
 3. **🆘 Having issues?** Check `TROUBLESHOOTING.md` for common problems and solutions
 4. **📚 Follow the detailed guide below** for step-by-step instructions
+
+## Lessons Learned: Drasi Query Development 📚
+
+During the development of this Azure Role Assignment Monitor, we encountered several common issues with Drasi queries and Event Hub integration. This section documents these challenges and their solutions to help future developers avoid the same pitfalls.
+
+### 🔧 **Query Language and Parser Issues**
+
+#### **Issue: YAML Multiline Scalar Formatting**
+**Problem:** Drasi continuous queries failed with parser errors when using the `>` operator for multiline Cypher queries.
+
+**Root Cause:** The `>` operator in YAML folds line breaks into spaces, causing the Cypher parser to receive malformed syntax.
+
+**Solution:** Use the `|` operator to preserve literal line breaks:
+```yaml
+# ❌ Wrong - causes parser errors
+query: >
+  MATCH (r:RoleAssignment)
+  WHERE r.requestBody CONTAINS 'role-id'
+  RETURN r.correlationId
+
+# ✅ Correct - preserves line structure  
+query: |
+  MATCH (r:RoleAssignment)
+  WHERE r.requestBody CONTAINS 'role-id'
+  RETURN r.correlationId
+```
+
+**Issues Fixed:** #9, #10
+
+#### **Issue: Unsupported Cypher Functions**
+**Problem:** Parser errors when using standard Cypher functions like `toString()`.
+
+**Root Cause:** Drasi Query Language (DQL) doesn't support all standard Cypher functions.
+
+**Solution:** Use DQL-compatible syntax and avoid unsupported functions:
+```cypher
+-- ❌ Wrong - toString() not supported
+WHERE r.requestBody IS NOT NULL AND toString(r.requestBody) CONTAINS 'role-id'
+
+-- ✅ Correct - direct string operation
+WHERE r.requestBody IS NOT NULL AND r.requestBody CONTAINS 'role-id'
+```
+
+**Issues Fixed:** #11, #12
+
+### 📊 **Data Extraction and Property Access Issues**
+
+#### **Issue: Event Hub Data Structure Misunderstanding**
+**Problem:** Continuous queries couldn't access role assignment properties from Event Hub data.
+
+**Root Cause:** Event Hub sends `requestbody` as a JSON string, not a parsed object, requiring different JSONPath selectors.
+
+**Event Hub Data Structure:**
+```json
+{
+  "records": [{
+    "properties": {
+      "requestbody": "{\"Id\":\"...\",\"Properties\":{\"PrincipalId\":\"...\"}}"
+    }
+  }]
+}
+```
+
+**Solution:** Use correct JSONPath selectors for the actual data structure:
+```yaml
+# ❌ Wrong - assumes parsed object
+principalId: $.properties.responseBody.properties.principalId
+
+# ✅ Correct - extracts from JSON string
+requestBody: $.properties.requestbody
+```
+
+**Issues Fixed:** #5, #6, #7, #8
+
+#### **Issue: Incomplete Property Extraction**
+**Problem:** Continuous queries only returned `correlationId`, missing other important properties.
+
+**Root Cause:** Middleware configuration wasn't extracting all available Event Hub properties.
+
+**Solution:** Comprehensive middleware property extraction:
+```yaml
+properties:
+  time: $.time
+  resourceId: $.resourceId
+  operationName: $.operationName
+  correlationId: $.correlationId
+  caller: $.identity.claims.name
+  callerIpAddress: $.callerIpAddress
+  tenantId: $.tenantId
+  properties: $.properties
+  requestBody: $.properties.requestbody
+```
+
+**Issues Fixed:** #13, #14
+
+#### **Issue: Incorrect Role Filtering Logic**
+**Problem:** WHERE clauses using exact field matching failed because required fields weren't extracted.
+
+**Root Cause:** Trying to filter on `roleDefinitionId` field that wasn't properly extracted from the JSON string.
+
+**Solution:** Use string contains matching on the raw `requestBody`:
+```cypher
+-- ❌ Wrong - field not available
+WHERE r.roleDefinitionId = '/providers/Microsoft.Authorization/roleDefinitions/1c0163c0-47e6-4577-8991-ea5c82e286e4'
+
+-- ✅ Correct - string contains on raw data
+WHERE r.requestBody CONTAINS '1c0163c0-47e6-4577-8991-ea5c82e286e4'
+```
+
+**Issues Fixed:** #1, #2
+
+### 🏷️ **Configuration and Naming Issues**
+
+#### **Issue: Generic Source Names**
+**Problem:** Source named 'my-source' didn't reflect its purpose, making configuration unclear.
+
+**Root Cause:** Poor naming conventions that don't describe functionality.
+
+**Solution:** Use descriptive, purpose-driven names:
+```yaml
+# ❌ Wrong - generic name
+name: my-source
+
+# ✅ Correct - descriptive name
+name: azure-role-eventhub-source
+```
+
+**Benefits:**
+- Immediately clear what the source does
+- Easier maintenance and debugging
+- Better documentation and understanding
+
+**Issues Fixed:** #3, #4
+
+### 🚀 **Functional Evolution and Design Learnings**
+
+#### **Issue: Monolithic vs. Modular Design**
+**Problem:** Initial implementations were specific to single use cases, limiting extensibility.
+
+**Root Cause:** Not considering future requirements for multiple roles and actions.
+
+**Solution:** Implemented modular, configuration-driven architecture:
+```json
+{
+  "roleActions": {
+    "/providers/Microsoft.Authorization/roleDefinitions/role-id": {
+      "name": "Role Name",
+      "actions": {
+        "create": ["CreateAction"],
+        "delete": ["CleanupAction"]
+      }
+    }
+  }
+}
+```
+
+**Benefits:**
+- Easy to add new roles without code changes
+- Extensible action system
+- Configuration-driven behavior
+- Better testability and maintenance
+
+**Issues Fixed:** #15, #18, #19
+
+### 🎯 **Key Takeaways for Future Development**
+
+1. **Always Use Drasi Query Language Reference:** Consult [https://drasi.io/reference/query-language/](https://drasi.io/reference/query-language/) for syntax and supported functions
+
+2. **Understand Your Data Structure:** Examine actual Event Hub payloads before writing JSONPath selectors
+
+3. **Test Incrementally:** Start with simple property extraction before adding complex filtering logic
+
+4. **Use Descriptive Naming:** Names should immediately convey purpose and functionality
+
+5. **Plan for Extensibility:** Design modular systems that can grow with requirements
+
+6. **Validate YAML Syntax:** Use `yamllint` to catch formatting issues early
+
+7. **Monitor Drasi Logs:** Use `drasi list queries` and check status for early problem detection
+
+### 🔍 **Debugging Tips**
+
+When encountering Drasi query issues:
+
+1. **Check Query Status:**
+   ```bash
+   drasi list queries
+   # Look for TerminalError status
+   ```
+
+2. **Examine Raw Event Hub Data:**
+   ```bash
+   # Check what data structure you're actually receiving
+   ```
+
+3. **Test JSONPath Selectors:**
+   ```bash
+   # Use online JSONPath evaluators to test selectors
+   ```
+
+4. **Validate YAML:**
+   ```bash
+   yamllint Queries/*.yaml
+   ```
+
+5. **Start Simple:**
+   - Begin with basic property extraction
+   - Add filtering incrementally
+   - Test each change separately
+
+### 📖 **Related Documentation**
+
+- [Drasi Query Language Reference](https://drasi.io/reference/query-language/)
+- [Event Hub Schema Documentation](https://learn.microsoft.com/azure/azure-monitor/platform/activity-log-schema)
+- [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) - Common deployment and runtime issues
+
+---
+
+*These lessons learned represent real challenges encountered during development. By documenting them, we hope to accelerate future development and reduce common mistakes.*
